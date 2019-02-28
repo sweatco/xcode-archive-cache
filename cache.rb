@@ -6,6 +6,7 @@ require_relative 'lib/build_settings/loader'
 require_relative 'lib/build_graph/sha_calculator'
 require_relative 'lib/artifact_cache/local_storage'
 require_relative 'lib/build_graph/rebuild_evaluator'
+require_relative 'lib/build_graph/rebuild_list_composer'
 
 pods_project_path = ARGV[0]
 pods_project = Xcodeproj::Project.open(pods_project_path)
@@ -31,3 +32,7 @@ rebuild_evaluator = XcodeArchiveCache::BuildGraph::RebuildEvaluator.new(cache_st
 graph.nodes.each do |node|
   rebuild_evaluator.evaluate(node)
 end
+
+rebuild_list_composer = XcodeArchiveCache::BuildGraph::RebuildListComposer.new
+rebuild_list = rebuild_list_composer.compose(graph)
+
