@@ -11,6 +11,10 @@ module XcodeArchiveCache
       #
       attr_accessor :rebuild
 
+      # @return [String] sha256 of (input files + build settings + dependency shas)
+      #
+      attr_accessor :sha
+
       # @return [Array<XcodeArchiveCache::BuildGraph::Node>] dependent nodes
       #
       attr_reader :dependent
@@ -22,6 +26,10 @@ module XcodeArchiveCache
       # @return [Xcodeproj::Project::Object::PBXNativeTarget] corresponding native target
       #
       attr_reader :native_target
+
+      # @return [String] filtered `xcodebuild -showBuildSettings` output
+      #
+      attr_accessor :build_settings
 
       # @param [String] name
       # @param [Bool] rebuild
@@ -38,9 +46,10 @@ module XcodeArchiveCache
       end
 
       def to_s
+        sha_string = @sha ? @sha : "<none>"
         dependent_names = @dependent.length > 0 ? @dependent.map(&:name).join(", ") : "<none>"
         dependency_names = @dependencies.length > 0 ? @dependencies.map(&:name).join(", ") : "<none>"
-        "#{@name}\n\trebuild: #{@rebuild}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
+        "#{@name}\n\tsha: #{sha_string}\n\trebuild: #{@rebuild}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
       end
     end
   end
