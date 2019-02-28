@@ -32,17 +32,13 @@ module XcodeArchiveCache
       attr_accessor :build_settings
 
       # @param [String] name
-      # @param [Bool] rebuild
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] native_target
-      # @param [Array<Node>] dependent
-      # @param [Array<Node>] dependencies
       #
-      def initialize(name, rebuild, native_target, dependent = nil, dependencies = nil)
+      def initialize(name, native_target)
         @name = name
-        @rebuild = rebuild
         @native_target = native_target
-        @dependent = dependent ? dependent : []
-        @dependencies = dependencies ? dependencies : []
+        @dependent = []
+        @dependencies = []
       end
 
       def to_s

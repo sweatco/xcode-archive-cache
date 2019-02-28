@@ -60,7 +60,7 @@ module XcodeArchiveCache
           return node
         else
           @logger.debug("adding new node")
-          node = Node.new(display_name, false, native_target)
+          node = Node.new(display_name, native_target)
           graph.nodes.push(node)
         end
 
