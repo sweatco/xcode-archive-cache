@@ -4,8 +4,11 @@ require_relative 'extractor'
 module XcodeArchiveCache
   module BuildSettings
     class Loader
-      def initialize
-        @executor = Xcodebuild::Executor.new
+
+      # @param [Xcodebuild::Executor.new] executor
+      #
+      def initialize(executor)
+        @executor = executor
         @extractor = Extractor.new
       end
 

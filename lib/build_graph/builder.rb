@@ -18,11 +18,7 @@ module XcodeArchiveCache
       #
       def build_graph(project, root_target)
         graph = Graph.new
-
-        root_target.dependencies.each do |dependency|
-          add_to_graph(dependency, project, graph)
-        end
-
+        add_to_graph(root_target, project, graph)
         graph
       end
 
@@ -43,7 +39,7 @@ module XcodeArchiveCache
       def add_to_graph(object, project, graph, target_stack = [])
         @logger.debug("traversing #{object.display_name}")
 
-        native_target = find_native_target(project, object.native_target_uuid)
+        native_target = object.is_a?(Xcodeproj::Project::Object::PBXNativeTarget) ? object : find_native_target(project, object.native_target_uuid)
         unless native_target
           raise ArgumentError, "Native target not found for #{object.display_name} in #{project.path}"
         end

@@ -41,17 +41,6 @@ module XcodeArchiveCache
         @dependencies = []
       end
 
-      # @return [Array<XcodeArchiveCache::BuildGraph::Node>]
-      #         List of nodes which have no dependants and depend on us,
-      #         directly or transitively
-      #
-      def topmost_dependent_nodes
-        # kind of weird, but: "node depends on itself"
-        return [self] if dependent.length == 0
-
-        dependent.map(&:topmost_dependent_nodes).flatten
-      end
-
       def to_s
         sha_string = @sha ? @sha : "<none>"
         dependent_names = @dependent.length > 0 ? @dependent.map(&:name).join(", ") : "<none>"

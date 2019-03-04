@@ -16,6 +16,14 @@ module XcodeArchiveCache
 
         output
       end
+
+      # @param [String] project_path
+      # @param [String] configuration
+      # @param [String] scheme
+      #
+      def build(project_path, configuration, scheme, derived_data_path)
+        system "xcodebuild -project #{project_path} -configuration #{configuration} -destination 'generic/platform=iOS' -scheme #{scheme} -derivedDataPath #{derived_data_path} archive | xcpretty"
+      end
     end
   end
 end
