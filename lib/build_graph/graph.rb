@@ -3,21 +3,26 @@ module XcodeArchiveCache
     class Graph
       # @return [Array<XcodeArchiveCache::BuildGraph::Node>] graph nodes
       #
-      attr_accessor :nodes
+      attr_reader :nodes
 
-      def initialize
+      # @return [Xcodeproj::Project] project
+
+      attr_reader :project
+
+      def initialize(project)
         @nodes = []
+        @project = project
       end
 
       # @param [String] name
       #        Native target display name
       #
       def node_by_name(name)
-        @nodes.select {|node| node.name == name}.first
+        nodes.select {|node| node.name == name}.first
       end
 
       def to_s
-        @nodes.map(&:to_s).join("\n")
+        nodes.map(&:to_s).join("\n")
       end
     end
   end

@@ -22,9 +22,33 @@ module XcodeArchiveCache
         end
       end
 
+      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
+      #
+      def add_as_prebuilt_framework(prebuilt_node, dependent_target)
+        build_configuration = dependent_target.build_configurations.select {|configuration| configuration.name == @configuration_name}.first
+        unless build_configuration
+          raise ArgumentError.new, "#{@configuration_name} build configuration not found on target #{node.name}"
+        end
+
+        artifact_location = @artifact_extractor.unpacked_artifact_location(prebuilt_node)
+        search_path = path_to_search_path(artifact_location)
+        @logger.debug("using search path #{search_path}")
+        add_framework_search_path(build_configuration, search_path)
+
+        headers_search_path = path_to_iquote(artifact_location, prebuilt_node.native_target)
+        @logger.debug("using headers search path #{headers_search_path}")
+        add_headers_search_path(build_configuration, headers_search_path)
+
+        remove_framework_dependency(prebuilt_node.native_target, dependent_target)
+
+        @logger.debug("added prebuilt framework at #{search_path} to #{@configuration_name} configuration of #{dependent_target.display_name}")
+      end
+
       private
 
       FRAMEWORK_SEARCH_PATHS_KEY = "FRAMEWORK_SEARCH_PATHS"
+      OTHER_CFLAGS_KEY = "OTHER_CFLAGS"
       INHERITED_SETTINGS_VALUE = "$(inherited)"
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
@@ -65,28 +89,16 @@ module XcodeArchiveCache
       #
       def propagate_framework(prebuilt_node, dependent_node)
         dependent_node.dependent.each do |node|
-          add_as_prebuilt_framework(prebuilt_node, node)
+          propagate_prebuilt_framework(prebuilt_node, node)
         end
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
-      def add_as_prebuilt_framework(prebuilt_node, node)
+      def propagate_prebuilt_framework(prebuilt_node, node)
         if node.rebuild
-          build_configuration = node.native_target.build_configurations.select {|configuration| configuration.name == @configuration_name}.first
-          unless build_configuration
-            raise ArgumentError.new, "#{@configuration_name} build configuration not found on target #{node.name}"
-          end
-
-          artifact_location = @artifact_extractor.unpacked_artifact_location(prebuilt_node)
-          search_path = path_to_search_path(artifact_location)
-          @logger.debug("using search path #{search_path}")
-
-          add_framework_search_path(build_configuration, search_path)
-          remove_framework_dependency(prebuilt_node, node)
-
-          @logger.debug("added prebuilt framework at #{search_path} to #{@configuration_name} configuration of #{node.name}")
+          add_as_prebuilt_framework(prebuilt_node, node.native_target)
         end
 
         # add to upper level dependencies too
@@ -107,23 +119,37 @@ module XcodeArchiveCache
         build_configuration.build_settings[FRAMEWORK_SEARCH_PATHS_KEY] = framework_search_paths
       end
 
-      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [String] search_path
       #
-      def remove_framework_dependency(prebuilt_node, node)
+      def add_headers_search_path(build_configuration, search_path)
+        cflags = build_configuration.build_settings[OTHER_CFLAGS_KEY]
+        if cflags && cflags.length > 0
+          cflags += [search_path]
+        else
+          cflags = [INHERITED_SETTINGS_VALUE, search_path]
+        end
+
+        build_configuration.build_settings[OTHER_CFLAGS_KEY] = cflags
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] prebuilt_target
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
+      #
+      def remove_framework_dependency(prebuilt_target, dependent_target)
         # remove from "Link binary with libraries"
-        frameworks = node.native_target.frameworks_build_phase.files.select do |file|
-          file.display_name == prebuilt_node.native_target.product_reference.name
+        frameworks = dependent_target.frameworks_build_phase.files.select do |file|
+          file.display_name == prebuilt_target.product_reference.name
         end
 
         if frameworks.length > 0
           frameworks.each do |framework|
-            node.native_target.frameworks_build_phase.remove_file_reference(framework.file_ref)
+            dependent_target.frameworks_build_phase.remove_file_reference(framework.file_ref)
           end
         end
 
         # remove from "Target dependencies"
-        node.native_target.dependencies.delete_if {|dependency| dependency.target.uuid == prebuilt_node.native_target.uuid}
+        dependent_target.dependencies.delete_if {|dependency| dependency.target.uuid == prebuilt_target.uuid}
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
@@ -133,8 +159,22 @@ module XcodeArchiveCache
         node.native_target.headers_build_phase.files.clear
       end
 
+      # @param [String] path
+      # @return [String]
+      #
       def path_to_search_path(path)
         "\"#{path}\""
+      end
+
+      # @param [String] path
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] native_target
+      # @return [String]
+      #
+      def path_to_iquote(path, native_target)
+        if native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework]
+          search_path = File.join(path, File.basename(native_target.product_reference.name), "Headers")
+          "-iquote \"#{search_path}\""
+        end
       end
     end
   end

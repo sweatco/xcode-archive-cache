@@ -11,7 +11,7 @@ module XcodeArchiveCache
       #
       def initialize(storage, target_dir_path)
         @storage = storage
-        @target_dir_path = target_dir_path
+        @target_dir_path = File.absolute_path(target_dir_path)
         @archiver = Archiver.new
       end
 
