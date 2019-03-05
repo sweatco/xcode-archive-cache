@@ -1,4 +1,6 @@
-module XcodeArchiveCache; end
+module XcodeArchiveCache
+  ;
+end
 
 require 'zip'
 require 'pathname'
@@ -29,9 +31,11 @@ require 'build_settings/filter'
 require 'build_settings/loader'
 require 'build_settings/extractor'
 
-require 'xcodebuild/executor'
+require 'pods/fixer'
 
 require 'runner/runner'
+
+require 'xcodebuild/executor'
 
 config = {
     :workspace => "swc.xcworkspace",
@@ -42,11 +46,11 @@ config = {
     :derived_data_path => "build",
     :targets => [{
                      :name => "swc",
-                     :cached_dependencies => ["Pods_swc.framework"]
+                     :cached_dependencies => [{:name => "Pods_swc.framework", :embed_frameworks_script => "Pods/Target Support Files/Pods-swc/Pods-swc-frameworks.sh"}]
                  },
                  {
                      :name => "watch-extension",
-                     :cached_dependencies => ["Pods_watch_extension.framework"]
+                     :cached_dependencies => [{:name => "Pods_watch_extension.framework", :embed_frameworks_script => "Pods/Target Support Files/Pods-watch-extension/Pods-watch-extension-frameworks.sh"}]
                  }]
 }
 

@@ -19,7 +19,7 @@ module XcodeArchiveCache
       @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(config[:cache_storage][:local_dir])
       @rebuild_evaluator = XcodeArchiveCache::BuildGraph::RebuildEvaluator.new(@cache_storage)
 
-      @unpacked_artifacts_dir = File.join(config[:derived_data_path], "cached")
+      @unpacked_artifacts_dir = File.absolute_path(File.join(config[:derived_data_path], "cached"))
       @artifact_extractor = XcodeArchiveCache::ArtifactCache::ArtifactExtractor.new(@cache_storage, @unpacked_artifacts_dir)
       @product_extractor = XcodeArchiveCache::BuildProduct::Extractor.new(config[:configuration], config[:derived_data_path])
 
@@ -43,8 +43,8 @@ module XcodeArchiveCache
         exit 1
       end
 
-      target_config[:cached_dependencies].each do |dependency_name|
-        handle_dependency(target, dependency_name)
+      target_config[:cached_dependencies].each do |dependency_config|
+        handle_dependency(target, dependency_config)
       end
     end
 
@@ -58,9 +58,10 @@ module XcodeArchiveCache
     end
 
     # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
-    # @param [String] dependency_name
+    # @param [Hash] dependency_config
     #
-    def handle_dependency(target, dependency_name)
+    def handle_dependency(target, dependency_config)
+      dependency_name = dependency_config[:name]
       dependency_target = find_target(dependency_name)
       unless dependency_target
         puts "target not found for #{dependency_name} of #{target.display_name}"
@@ -77,6 +78,11 @@ module XcodeArchiveCache
       rebuild_missing(dependency_target, graph)
 
       fix_target_settings(target, graph)
+
+      if dependency_config[:embed_frameworks_script]
+        pods_fixer = XcodeArchiveCache::Pods::Fixer.new
+        pods_fixer.fix_embed_frameworks_script(dependency_config[:embed_frameworks_script], @unpacked_artifacts_dir)
+      end
     end
 
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
