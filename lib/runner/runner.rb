@@ -25,9 +25,6 @@ module XcodeArchiveCache
 
       @logger = Logger.new(STDOUT)
       @graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@logger)
-      @xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new
-
-      @build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(@xcodebuild_executor)
       @sha_calculator = XcodeArchiveCache::BuildGraph::NodeShaCalculator.new
 
       @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(config[:cache_storage][:local_dir])
@@ -82,7 +79,8 @@ module XcodeArchiveCache
       end
 
       graph = @graph_builder.build_graph(dependency_target)
-      load_settings(graph)
+
+      load_settings(dependency_target, graph)
       calculate_shas(graph)
       evaluate_for_rebuild(graph)
 
@@ -94,11 +92,18 @@ module XcodeArchiveCache
 
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
-    def load_settings(graph)
-      build_settings = @build_settings_loader.load_settings(graph.project, @config[:configuration])
+    def load_settings(target, graph)
+      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(target.project.path, @config[:configuration], target.platform_name)
+      build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(xcodebuild_executor)
+      build_settings = build_settings_loader.load_settings
 
       graph.nodes.each do |node|
-        node.build_settings = build_settings[node.name]
+        node_settings = build_settings[node.name]
+        unless node_settings
+          raise StandardError.new, "No build settings loaded for #{node.name}"
+        end
+
+        node.build_settings = node_settings
       end
     end
 
@@ -127,11 +132,9 @@ module XcodeArchiveCache
         @build_settings_fixer.fix(graph)
         target.project.save
 
-        build_result = @xcodebuild_executor.build(target.project.path,
-                                                  config[:configuration],
-                                                  target.name,
-                                                  config[:derived_data_path])
-        if build_result == nil
+        xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(target.project.path, @config[:configuration], target.platform_name)
+        build_result = xcodebuild_executor.build(target.name, @config[:derived_data_path])
+        unless build_result
           puts "failed to build dependencies"
           exit 1
         end
@@ -156,7 +159,7 @@ module XcodeArchiveCache
 
         FileUtils.mkdir_p(unpacked_product_dir)
         @product_extractor.copy_product(target.name, node, unpacked_product_dir)
-        cache_storage.store(node, unpacked_product_dir)
+        @cache_storage.store(node, unpacked_product_dir)
       end
     end
 

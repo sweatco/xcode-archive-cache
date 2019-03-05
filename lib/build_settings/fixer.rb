@@ -111,7 +111,13 @@ module XcodeArchiveCache
       def add_framework_search_path(build_configuration, search_path)
         framework_search_paths = build_configuration.build_settings[FRAMEWORK_SEARCH_PATHS_KEY]
         if framework_search_paths && framework_search_paths.length > 0
-          framework_search_paths += [search_path]
+          if framework_search_paths.is_a?(String)
+            framework_search_paths = [framework_search_paths, search_path]
+          elsif framework_search_paths.is_a?(Array)
+            framework_search_paths += [search_path]
+          else
+            raise StandardError.new, "Framework search paths value is neither string nor array: #{framework_search_paths.class}"
+          end
         else
           framework_search_paths = [INHERITED_SETTINGS_VALUE, search_path]
         end
@@ -125,7 +131,13 @@ module XcodeArchiveCache
       def add_headers_search_path(build_configuration, search_path)
         cflags = build_configuration.build_settings[OTHER_CFLAGS_KEY]
         if cflags && cflags.length > 0
-          cflags += [search_path]
+          if cflags.is_a?(String)
+            cflags = [cflags, search_path]
+          elsif cflags.is_a?(Array)
+            cflags += [search_path]
+          else
+            raise StandardError.new, "Other C flags value is neither string nor array: #{cflags.class}"
+          end
         else
           cflags = [INHERITED_SETTINGS_VALUE, search_path]
         end

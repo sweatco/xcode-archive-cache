@@ -13,6 +13,10 @@ config = {
     :targets => [{
                      :name => "swc",
                      :cached_dependencies => ["Pods_swc.framework"]
+                 },
+                 {
+                     :name => "watch-extension",
+                     :cached_dependencies => ["Pods_watch_extension.framework"]
                  }]
 }
 
