@@ -1,5 +1,3 @@
-require_relative 'filter'
-
 module XcodeArchiveCache
   module BuildSettings
     class Extractor

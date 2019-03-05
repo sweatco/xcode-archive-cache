@@ -1,8 +1,3 @@
-require 'fileutils'
-
-require_relative 'abstract_storage'
-require_relative 'archiver'
-
 module XcodeArchiveCache
   module ArtifactCache
     class LocalStorage < AbstractStorage

@@ -1,7 +1,3 @@
-require 'zip'
-require 'pathname'
-require 'fileutils'
-
 module XcodeArchiveCache
   module ArtifactCache
     class Archiver

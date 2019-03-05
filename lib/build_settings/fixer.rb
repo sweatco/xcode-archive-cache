@@ -1,5 +1,3 @@
-require 'xcodeproj'
-
 module XcodeArchiveCache
   module BuildSettings
     class Fixer

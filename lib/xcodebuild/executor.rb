@@ -1,5 +1,3 @@
-require 'open3'
-
 module XcodeArchiveCache
   module Xcodebuild
     class Executor

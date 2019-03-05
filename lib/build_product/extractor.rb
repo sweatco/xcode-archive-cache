@@ -1,5 +1,3 @@
-require 'fileutils'
-
 module XcodeArchiveCache
   module BuildProduct
     class Extractor

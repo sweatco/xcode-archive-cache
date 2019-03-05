@@ -1,6 +1,3 @@
-require_relative '../xcodebuild/executor'
-require_relative 'extractor'
-
 module XcodeArchiveCache
   module BuildSettings
     class Loader

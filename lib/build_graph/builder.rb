@@ -1,7 +1,3 @@
-require 'xcodeproj'
-require_relative 'graph'
-require_relative 'node'
-
 module XcodeArchiveCache
   module BuildGraph
     class Builder

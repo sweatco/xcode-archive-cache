@@ -1,14 +1,3 @@
-require 'xcodeproj'
-
-require_relative '../build_graph/builder'
-require_relative '../build_settings/loader'
-require_relative '../build_graph/sha_calculator'
-require_relative '../artifact_cache/local_storage'
-require_relative '../build_graph/rebuild_evaluator'
-require_relative '../artifact_cache/artifact_extractor'
-require_relative '../build_settings/fixer'
-require_relative '../build_product/extractor'
-
 module XcodeArchiveCache
   class Runner
 

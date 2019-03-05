@@ -1,7 +1,3 @@
-require 'tempfile'
-require 'find'
-require 'digest'
-
 module XcodeArchiveCache
   module BuildGraph
     class NodeShaCalculator

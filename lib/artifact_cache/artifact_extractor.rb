@@ -1,7 +1,3 @@
-require 'fileutils'
-
-require_relative 'archiver'
-
 module XcodeArchiveCache
   module ArtifactCache
     class ArtifactExtractor
