@@ -24,7 +24,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def unpacked_artifact_location(node)
-        File.join(@target_dir_path, node.name)
+        File.join(target_dir_path, node.name)
       end
 
       private
@@ -32,7 +32,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def unpack_single(node)
-        cached_artifact_path = @storage.cached_artifact_path(node)
+        cached_artifact_path = storage.cached_artifact_path(node)
         destination = unpacked_artifact_location(node)
 
         if File.exists?(destination)
@@ -40,7 +40,7 @@ module XcodeArchiveCache
         end
 
         FileUtils.mkdir_p(destination)
-        @archiver.unarchive(cached_artifact_path, destination)
+        archiver.unarchive(cached_artifact_path, destination)
       end
 
       # @return [XcodeArchiveCache::ArtifactCache::AbstractStorage]
@@ -50,6 +50,10 @@ module XcodeArchiveCache
       # @return [String]
       #
       attr_reader :target_dir_path
+
+      # @return [XcodeArchiveCache::ArtifactCache::Archiver]
+      # 
+      attr_reader :archiver
     end
   end
 end

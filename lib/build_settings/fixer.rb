@@ -24,26 +24,38 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
       #
       def add_as_prebuilt_framework(prebuilt_node, dependent_target)
-        build_configuration = dependent_target.build_configurations.select {|configuration| configuration.name == @configuration_name}.first
+        build_configuration = dependent_target.build_configurations.select {|configuration| configuration.name == configuration_name}.first
         unless build_configuration
-          raise ArgumentError.new, "#{@configuration_name} build configuration not found on target #{node.name}"
+          raise ArgumentError.new, "#{configuration_name} build configuration not found on target #{node.name}"
         end
 
-        artifact_location = @artifact_extractor.unpacked_artifact_location(prebuilt_node)
+        artifact_location = artifact_extractor.unpacked_artifact_location(prebuilt_node)
         search_path = path_to_search_path(artifact_location)
-        @logger.debug("using search path #{search_path}")
+        logger.debug("using search path #{search_path}")
         add_framework_search_path(build_configuration, search_path)
 
         headers_search_path = path_to_iquote(artifact_location, prebuilt_node.native_target)
-        @logger.debug("using headers search path #{headers_search_path}")
+        logger.debug("using headers search path #{headers_search_path}")
         add_headers_search_path(build_configuration, headers_search_path)
 
         remove_framework_dependency(prebuilt_node.native_target, dependent_target)
 
-        @logger.debug("added prebuilt framework at #{search_path} to #{@configuration_name} configuration of #{dependent_target.display_name}")
+        logger.debug("added prebuilt framework at #{search_path} to #{configuration_name} configuration of #{dependent_target.display_name}")
       end
 
       private
+
+      # @return [String]
+      #
+      attr_reader :configuration_name
+
+      # @return [XcodeArchiveCache::ArtifactCache::ArtifactExtractor]
+      # 
+      attr_reader :artifact_extractor
+
+      # @return [Logger]
+      # 
+      attr_reader :logger
 
       FRAMEWORK_SEARCH_PATHS_KEY = "FRAMEWORK_SEARCH_PATHS"
       OTHER_CFLAGS_KEY = "OTHER_CFLAGS"
@@ -52,18 +64,18 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def propagate_node(node)
-        @logger.debug("propagating #{node.name}")
+        logger.debug("propagating #{node.name}")
 
         if node.rebuild
           # node should be rebuilt, so we shouldn't point dependants to the cached artifact
           # because there's no such artifact
           #
-          @logger.debug("#{node.name} should be rebuilt, skipping")
+          logger.debug("#{node.name} should be rebuilt, skipping")
           return
         end
 
         if node.native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework]
-          @logger.debug("product is a framework")
+          logger.debug("product is a framework")
 
           # add to framework search paths of dependents
           propagate_framework(node, node)
@@ -71,7 +83,7 @@ module XcodeArchiveCache
           # remove headers so they don't cause non-module includes
           delete_headers(node)
         elsif node.native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
-          @logger.debug("product is a static library")
+          logger.debug("product is a static library")
 
           # TODO: add to library search paths of dependents
           raise StandardError.new, "Static libraries not supported yet"
@@ -79,7 +91,7 @@ module XcodeArchiveCache
           raise ArgumentError.new, "Unsupported cached product type for #{node.name}: #{node.native_target.product_type}"
         end
 
-        @logger.debug("done propagating #{node.name}")
+        logger.debug("done propagating #{node.name}")
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
@@ -165,7 +177,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def delete_headers(node)
-        @logger.debug("deleting headers of #{node.name}")
+        logger.debug("deleting headers of #{node.name}")
         node.native_target.headers_build_phase.files.clear
       end
 

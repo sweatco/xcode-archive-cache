@@ -40,10 +40,10 @@ module XcodeArchiveCache
       end
 
       def to_s
-        sha_string = @sha ? @sha : "<none>"
-        dependent_names = @dependent.length > 0 ? @dependent.map(&:name).join(", ") : "<none>"
-        dependency_names = @dependencies.length > 0 ? @dependencies.map(&:name).join(", ") : "<none>"
-        "#{@name}\n\tsha: #{sha_string}\n\trebuild: #{@rebuild}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
+        sha_string = sha ? sha : "<none>"
+        dependent_names = dependent.length > 0 ? dependent.map(&:name).join(", ") : "<none>"
+        dependency_names = dependencies.length > 0 ? dependencies.map(&:name).join(", ") : "<none>"
+        "#{name}\n\tsha: #{sha_string}\n\trebuild: #{rebuild}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
       end
     end
   end

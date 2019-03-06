@@ -25,13 +25,21 @@ module XcodeArchiveCache
           FileUtils.mkdir_p(archive_directory)
         end
 
-        @archiver.archive(path, archive_path)
+        archiver.archive(path, archive_path)
       end
 
       private
 
+      # @return [String]
+      #
+      attr_reader :cache_dir_path
+
+      # @return [XcodeArchiveCache::ArtifactCache::Archiver]
+      #
+      attr_reader :archiver
+
       def path_inside_cache_dir(node)
-        File.join(@cache_dir_path, node.name, node.sha)
+        File.join(cache_dir_path, node.name, node.sha)
       end
     end
   end

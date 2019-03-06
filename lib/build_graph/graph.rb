@@ -6,7 +6,7 @@ module XcodeArchiveCache
       attr_reader :nodes
 
       # @return [Xcodeproj::Project] project
-
+      #
       attr_reader :project
 
       def initialize(project)

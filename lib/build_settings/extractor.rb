@@ -42,13 +42,13 @@ module XcodeArchiveCache
         stripped = target_settings.strip
         return nil unless stripped.length > 0
 
-        target_name_match = @regex.match(stripped)
+        target_name_match = regex.match(stripped)
         return nil unless target_name_match
 
         target_name = target_name_match["target"]
         return nil unless target_name
 
-        [target_name, @filter.filter(stripped)]
+        [target_name, filter.filter(stripped)]
       end
     end
   end

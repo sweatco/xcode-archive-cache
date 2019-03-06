@@ -17,7 +17,7 @@ module XcodeArchiveCache
         # so if some dependency changes, that change propagates
         # all the way to the top level
         #
-        node.rebuild = @cache_storage.cached_artifact_path(node) == nil
+        node.rebuild = cache_storage.cached_artifact_path(node) == nil
       end
 
       private

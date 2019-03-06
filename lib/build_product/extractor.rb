@@ -21,15 +21,23 @@ module XcodeArchiveCache
 
       private
 
+      # @return [String]
+      # 
+      attr_reader :configuration
+
+      # @return [String]
+      #
+      attr_reader :derived_data_path
+
       # @param [String] root_target_name
       # @param [XcodeArchiveCache::BuildGraph::Node] built_node
       #
       def product_path(root_target_name, built_node)
         if has_framework_product(built_node)
-          root_product_path = File.join(@derived_data_path, "ArchiveIntermediates",
+          root_product_path = File.join(derived_data_path, "ArchiveIntermediates",
                                         root_target_name,
                                         "BuildProductsPath",
-                                        "#{@configuration}-#{built_node.native_target.sdk}")
+                                        "#{configuration}-#{built_node.native_target.sdk}")
           if root_target_name == built_node.name
             return root_product_path
           else

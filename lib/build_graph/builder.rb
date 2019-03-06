@@ -31,7 +31,7 @@ module XcodeArchiveCache
       # @return [Node] added or edited node
       #
       def add_to_graph(target, graph, target_stack = [])
-        @logger.debug("traversing #{target.display_name}")
+        logger.debug("traversing #{target.display_name}")
 
         unless target
           raise ArgumentError, "Target is required"
@@ -45,10 +45,10 @@ module XcodeArchiveCache
 
         node = graph.node_by_name(display_name)
         if node
-          @logger.debug("already traversed this one")
+          logger.debug("already traversed this one")
           return node
         else
-          @logger.debug("adding new node")
+          logger.debug("adding new node")
           node = Node.new(display_name, target)
           graph.nodes.push(node)
         end
@@ -60,17 +60,17 @@ module XcodeArchiveCache
           dependency_target =  target.project.native_targets.select {|some_native_target| some_native_target.uuid == dependency.native_target_uuid}.first
           dependency_node = add_to_graph(dependency_target, graph, target_stack)
 
-          @logger.debug("adding #{node.name} as dependent to #{dependency_node.name}")
+          logger.debug("adding #{node.name} as dependent to #{dependency_node.name}")
           dependency_node.dependent.push(node)
 
-          @logger.debug("adding #{dependency_node.name} as dependency to #{node.name}")
+          logger.debug("adding #{dependency_node.name} as dependency to #{node.name}")
           dependencies.push(dependency_node)
         end
 
         target_stack.pop
         node.dependencies.push(*dependencies)
 
-        @logger.debug("done with #{target.display_name}")
+        logger.debug("done with #{target.display_name}")
         node
       end
     end

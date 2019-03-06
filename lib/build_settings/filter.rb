@@ -21,7 +21,7 @@ module XcodeArchiveCache
         lines.drop(1)
 
         kept_settings = lines.select do |line|
-          match = @setting_name_regex.match(line)
+          match = setting_name_regex.match(line)
           next unless match
 
           name = match["name"]
