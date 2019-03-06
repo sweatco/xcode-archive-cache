@@ -39,6 +39,14 @@ module XcodeArchiveCache
         @dependencies = []
       end
 
+      def has_framework_product?
+        native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework]
+      end
+
+      def has_static_library_product?
+        native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
+      end
+
       def to_s
         sha_string = sha ? sha : "<none>"
         dependent_names = dependent.length > 0 ? dependent.map(&:name).join(", ") : "<none>"

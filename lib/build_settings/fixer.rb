@@ -34,7 +34,7 @@ module XcodeArchiveCache
         logger.debug("using search path #{search_path}")
         add_framework_search_path(build_configuration, search_path)
 
-        headers_search_path = path_to_iquote(artifact_location, prebuilt_node.native_target)
+        headers_search_path = path_to_iquote(artifact_location, prebuilt_node)
         logger.debug("using headers search path #{headers_search_path}")
         add_headers_search_path(build_configuration, headers_search_path)
 
@@ -74,7 +74,7 @@ module XcodeArchiveCache
           return
         end
 
-        if node.native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework]
+        if node.has_framework_product?
           logger.debug("product is a framework")
 
           # add to framework search paths of dependents
@@ -82,7 +82,7 @@ module XcodeArchiveCache
 
           # remove headers so they don't cause non-module includes
           delete_headers(node)
-        elsif node.native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
+        elsif node.has_static_library_product?
           logger.debug("product is a static library")
 
           # TODO: add to library search paths of dependents
@@ -189,12 +189,12 @@ module XcodeArchiveCache
       end
 
       # @param [String] path
-      # @param [Xcodeproj::Project::Object::PBXNativeTarget] native_target
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
       # @return [String]
       #
-      def path_to_iquote(path, native_target)
-        if native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework]
-          search_path = File.join(path, File.basename(native_target.product_reference.name), "Headers")
+      def path_to_iquote(path, node)
+        if node.has_framework_product?
+          search_path = File.join(path, File.basename(node.native_target.product_reference.name), "Headers")
           "-iquote \"#{search_path}\""
         end
       end

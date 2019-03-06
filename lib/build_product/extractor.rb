@@ -33,7 +33,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] built_node
       #
       def product_path(root_target_name, built_node)
-        if has_framework_product(built_node)
+        if built_node.has_framework_product?
           root_product_path = File.join(derived_data_path, "ArchiveIntermediates",
                                         root_target_name,
                                         "BuildProductsPath",
@@ -43,7 +43,8 @@ module XcodeArchiveCache
           else
             return File.join(root_product_path, built_node.name)
           end
-        elsif has_static_library_product(built_node)
+        elsif built_node.has_static_library_product?
+          # TODO: implement
         else
         end
       end
@@ -52,20 +53,12 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] built_node
       #
       def list_products(path, built_node)
-        if has_framework_product(built_node)
+        if has_framework_product?(built_node)
           framework_path = File.join(path, "*.framework")
           dsym_path = framework_path + ".dSYM"
           bcsymbolmap_path = File.join(path, "*.bcsymbolmap")
           Dir.glob(bcsymbolmap_path) + Dir.glob(framework_path) + Dir.glob(dsym_path)
         end
-      end
-
-      def has_framework_product(built_node)
-        built_node.native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework]
-      end
-
-      def has_static_library_product(built_node)
-        built_node.native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
       end
     end
   end
