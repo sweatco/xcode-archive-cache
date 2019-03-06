@@ -13,8 +13,6 @@ module XcodeArchiveCache
       @projects = @workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
 
       @logger = Logger.new(STDOUT)
-      @graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@logger)
-      @sha_calculator = XcodeArchiveCache::BuildGraph::NodeShaCalculator.new
 
       @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(config[:cache_storage][:local_dir])
       @rebuild_evaluator = XcodeArchiveCache::BuildGraph::RebuildEvaluator.new(@cache_storage)
@@ -68,10 +66,9 @@ module XcodeArchiveCache
         exit 1
       end
 
-      graph = @graph_builder.build_graph(dependency_target)
-
-      load_settings(dependency_target, graph)
-      calculate_shas(graph)
+      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(dependency_target.project.path, @config[:configuration], dependency_target.platform_name)
+      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(xcodebuild_executor, @logger)
+      graph = graph_builder.build_graph(dependency_target)
       evaluate_for_rebuild(graph)
 
       @artifact_extractor.unpack_available(graph)
@@ -82,31 +79,6 @@ module XcodeArchiveCache
       if dependency_config[:embed_frameworks_script]
         pods_fixer = XcodeArchiveCache::Pods::Fixer.new
         pods_fixer.fix_embed_frameworks_script(dependency_config[:embed_frameworks_script], @unpacked_artifacts_dir)
-      end
-    end
-
-    # @param [XcodeArchiveCache::BuildGraph::Graph] graph
-    #
-    def load_settings(target, graph)
-      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(target.project.path, @config[:configuration], target.platform_name)
-      build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(xcodebuild_executor)
-      build_settings = build_settings_loader.load_settings
-
-      graph.nodes.each do |node|
-        node_settings = build_settings[node.name]
-        unless node_settings
-          raise StandardError.new, "No build settings loaded for #{node.name}"
-        end
-
-        node.build_settings = node_settings
-      end
-    end
-
-    # @param [XcodeArchiveCache::BuildGraph::Graph] graph
-    #
-    def calculate_shas(graph)
-      graph.nodes.each do |node|
-        @sha_calculator.calculate(node)
       end
     end
 
