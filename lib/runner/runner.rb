@@ -5,23 +5,23 @@ module XcodeArchiveCache
     #
     def initialize(config)
       @config = config
+      @logger = Logger.new(STDOUT)
 
       workspace_path = File.absolute_path(config[:workspace])
-      @workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
-
+      workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
       workspace_dir = File.expand_path("..", workspace_path)
-      @projects = @workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
 
-      @logger = Logger.new(STDOUT)
+      @projects = workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
 
       @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(config[:cache_storage][:local_dir])
       @rebuild_evaluator = XcodeArchiveCache::BuildGraph::RebuildEvaluator.new(@cache_storage)
 
       @unpacked_artifacts_dir = File.absolute_path(File.join(config[:derived_data_path], "cached"))
-      @artifact_extractor = XcodeArchiveCache::ArtifactCache::ArtifactExtractor.new(@cache_storage, @unpacked_artifacts_dir)
-      @product_extractor = XcodeArchiveCache::BuildProduct::Extractor.new(config[:configuration], config[:derived_data_path])
+      @artifact_extractor = XcodeArchiveCache::ArtifactCache::ArtifactExtractor.new(@cache_storage)
+      @product_extractor = XcodeArchiveCache::Build::ProductExtractor.new(config[:configuration], config[:derived_data_path])
 
-      @build_settings_fixer = XcodeArchiveCache::BuildSettings::Fixer.new(config[:configuration], @artifact_extractor, @logger)
+      @injection_storage = XcodeArchiveCache::Injection::Storage.new(@unpacked_artifacts_dir)
+      @injector = XcodeArchiveCache::Injection::Injector.new(config[:configuration], @injection_storage, @logger)
     end
 
     def run
@@ -60,9 +60,11 @@ module XcodeArchiveCache
     #
     def handle_dependency(target, dependency_config)
       dependency_name = dependency_config[:name]
+      @logger.info("checking #{dependency_name}")
+
       dependency_target = find_target(dependency_name)
       unless dependency_target
-        puts "target not found for #{dependency_name} of #{target.display_name}"
+        @logger.error("target not found for #{dependency_name} of #{target.display_name}")
         exit 1
       end
 
@@ -70,11 +72,9 @@ module XcodeArchiveCache
       graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(xcodebuild_executor, @logger)
       graph = graph_builder.build_graph(dependency_target)
       evaluate_for_rebuild(graph)
-
-      @artifact_extractor.unpack_available(graph)
-      rebuild_missing(dependency_target, graph)
-
-      fix_target_settings(target, graph)
+      extract_cached_artifacts(graph)
+      perform_rebuild(dependency_target, graph)
+      @injector.inject_in_dependent(graph, target)
 
       if dependency_config[:embed_frameworks_script]
         pods_fixer = XcodeArchiveCache::Pods::Fixer.new
@@ -90,55 +90,34 @@ module XcodeArchiveCache
       end
     end
 
-    # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
-    def rebuild_missing(target, graph)
-      should_rebuild_anything = graph.nodes.reduce(false) {|rebuild, node| rebuild || node.rebuild}
-      if should_rebuild_anything
-        @build_settings_fixer.fix(graph)
-        target.project.save
+    def extract_cached_artifacts(graph)
+      graph.nodes.each do |node|
+        next if node.rebuild
 
-        xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(target.project.path, @config[:configuration], target.platform_name)
-        build_result = xcodebuild_executor.build(target.name, @config[:derived_data_path])
-        unless build_result
-          puts "failed to build dependencies"
-          exit 1
-        end
-
-        copy_and_cache_products(target, graph)
-      else
-        puts "no need to rebuild anything here"
+        destination = @injection_storage.prepare_storage(node)
+        @artifact_extractor.unpack(node, destination)
       end
     end
 
-    # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+    # @param [Xcodeproj::Project::Object::PBXNativeTarget] root_target
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
-    def copy_and_cache_products(target, graph)
+    def perform_rebuild(root_target, graph)
+      rebuild_performer = XcodeArchiveCache::Build::Performer.new(@logger)
+      return unless rebuild_performer.should_rebuild?(graph)
+
+      @injector.inject_in_graph(graph)
+      rebuild_performer.rebuild_missing(root_target, graph)
+
       graph.nodes.each do |node|
         next unless node.rebuild
 
-        unpacked_product_dir = File.join(@unpacked_artifacts_dir, node.name)
-        if File.exist?(unpacked_product_dir)
-          FileUtils.rm_rf(unpacked_product_dir)
-        end
-
-        FileUtils.mkdir_p(unpacked_product_dir)
-        @product_extractor.copy_product(target.name, node, unpacked_product_dir)
-        @cache_storage.store(node, unpacked_product_dir)
+        file_paths = @product_extractor.list_product_contents(root_target.name, node)
+        @injection_storage.store(node, file_paths)
+        @cache_storage.store(node, @injection_storage.get_storage_path(node))
       end
-    end
-
-    # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
-    # @param [XcodeArchiveCache::BuildGraph::Graph] graph
-    #
-    def fix_target_settings(target, graph)
-      graph.nodes.each do |node|
-        @build_settings_fixer.add_as_prebuilt_framework(node, target)
-      end
-
-      target.project.save
     end
   end
 end

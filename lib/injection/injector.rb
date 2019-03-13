@@ -1,24 +1,53 @@
 module XcodeArchiveCache
-  module BuildSettings
-    class Fixer
+  module Injection
+    class Injector
 
       # @param [String] configuration_name
-      # @param [XcodeArchiveCache::ArtifactCache::ArtifactExtractor] artifact_extractor
+      # @param [XcodeArchiveCache::Injection::Storage] storage
       # @param [Logger] logger
       #
-      def initialize(configuration_name, artifact_extractor, logger)
+      def initialize(configuration_name, storage, logger)
         @configuration_name = configuration_name
-        @artifact_extractor = artifact_extractor
+        @storage = storage
         @logger = logger
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
-      def fix(graph)
+      def inject_in_graph(graph)
         graph.nodes.each do |node|
           propagate_node(node)
         end
+
+        projects = graph.nodes.map(&:native_target).map(&:project).uniq
+        projects.each {|project| project.save}
       end
+
+      def inject_in_dependent(graph, target)
+        graph.nodes.each do |node|
+          add_as_prebuilt_framework(node, target)
+        end
+
+        target.project.save
+      end
+
+      private
+
+      # @return [String]
+      #
+      attr_reader :configuration_name
+
+      # @return [XcodeArchiveCache::Injection::Storage]
+      # 
+      attr_reader :storage
+
+      # @return [Logger]
+      # 
+      attr_reader :logger
+
+      FRAMEWORK_SEARCH_PATHS_KEY = "FRAMEWORK_SEARCH_PATHS"
+      OTHER_CFLAGS_KEY = "OTHER_CFLAGS"
+      INHERITED_SETTINGS_VALUE = "$(inherited)"
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
@@ -29,7 +58,7 @@ module XcodeArchiveCache
           raise ArgumentError.new, "#{configuration_name} build configuration not found on target #{node.name}"
         end
 
-        artifact_location = artifact_extractor.unpacked_artifact_location(prebuilt_node)
+        artifact_location = storage.get_storage_path(prebuilt_node)
         search_path = path_to_search_path(artifact_location)
         logger.debug("using search path #{search_path}")
         add_framework_search_path(build_configuration, search_path)
@@ -42,24 +71,6 @@ module XcodeArchiveCache
 
         logger.debug("added prebuilt framework at #{search_path} to #{configuration_name} configuration of #{dependent_target.display_name}")
       end
-
-      private
-
-      # @return [String]
-      #
-      attr_reader :configuration_name
-
-      # @return [XcodeArchiveCache::ArtifactCache::ArtifactExtractor]
-      # 
-      attr_reader :artifact_extractor
-
-      # @return [Logger]
-      # 
-      attr_reader :logger
-
-      FRAMEWORK_SEARCH_PATHS_KEY = "FRAMEWORK_SEARCH_PATHS"
-      OTHER_CFLAGS_KEY = "OTHER_CFLAGS"
-      INHERITED_SETTINGS_VALUE = "$(inherited)"
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #

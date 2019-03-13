@@ -24,14 +24,17 @@ require 'artifact_cache/local_storage'
 require 'artifact_cache/artifact_extractor'
 require 'artifact_cache/archiver'
 
-require 'build_product/extractor'
+require 'build/performer'
+require 'build/product_extractor'
 
-require 'build_settings/fixer'
 require 'build_settings/filter'
 require 'build_settings/loader'
 require 'build_settings/extractor'
 
 require 'pods/fixer'
+
+require 'injection/injector'
+require 'injection/storage'
 
 require 'runner/runner'
 
