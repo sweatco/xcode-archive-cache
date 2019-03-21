@@ -18,6 +18,14 @@ module XcodeArchiveCache
         output
       end
 
+      # @param [String] command
+      # @param [Boolean] print_command
+      #
+      def execute(command, print_command = false)
+        actual_command = extend_for_pipefail(command, print_command)
+        system actual_command
+      end
+
       private
 
       # @param [String] command
