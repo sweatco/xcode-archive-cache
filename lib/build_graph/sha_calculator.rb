@@ -25,7 +25,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       # @return [Array<String>]
-      #         List of input file paths
+      #         List of input file paths for native target
       #
       def list_input_paths(node)
         inputs = []
@@ -35,25 +35,29 @@ module XcodeArchiveCache
         end
 
         # file path order should not affect evaluation result
-        inputs.flatten.sort
+        inputs.flatten.compact.sort
       end
 
       # @param [Xcodeproj::Project::Object::AbstractBuildPhase] build_phase
       #
       # @return [Array<String>]
-      #         List of input file paths
+      #         List of input file paths for build phase
       #
       def list_build_phase_inputs(build_phase)
         build_phase.files_references.map do |file_ref|
-          path = file_ref.real_path.to_s
+          next unless file_ref.is_a?(Xcodeproj::Project::Object::PBXFileReference)
+
+          begin
+            path = file_ref.real_path.to_s
+          rescue
+            next
+          end
 
           if File.file?(path)
-            return path
+            next path
           elsif File.directory?(path)
             # NOTE: find doesn't follow symlinks, shouldn't we follow them?
-            return Find.find(path).select do |found|
-              File.file?(found)
-            end
+            next Find.find(path).select {|found| File.file?(found)}
           end
 
           []

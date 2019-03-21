@@ -2,32 +2,34 @@ module XcodeArchiveCache
   module Injection
     class Injector
 
+      include XcodeArchiveCache::Logs
+
       # @param [String] configuration_name
       # @param [XcodeArchiveCache::Injection::Storage] storage
-      # @param [Logger] logger
       #
-      def initialize(configuration_name, storage, logger)
+      def initialize(configuration_name, storage)
         @configuration_name = configuration_name
         @storage = storage
-        @logger = logger
+        @headers_mover = HeadersMover.new(storage)
+        @dependency_remover = DependencyRemover.new
+        @build_flags_changer = BuildFlagsChanger.new
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
-      def inject_in_graph(graph)
-        graph.nodes.each do |node|
-          propagate_node(node)
-        end
+      def perform_internal_injection(graph)
+        graph.nodes.each {|node| add_as_prebuilt_to_dependents(node)}
 
         projects = graph.nodes.map(&:native_target).map(&:project).uniq
+        debug("updating #{projects.length} projects")
         projects.each {|project| project.save}
       end
 
-      def inject_in_dependent(graph, target)
-        graph.nodes.each do |node|
-          add_as_prebuilt_framework(node, target)
-        end
-
+      # @param [XcodeArchiveCache::BuildGraph::Graph] graph
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      #
+      def perform_outgoing_injection(graph, target)
+        graph.nodes.each {|node| add_as_prebuilt_dependency(node, target)}
         target.project.save
       end
 
@@ -37,177 +39,108 @@ module XcodeArchiveCache
       #
       attr_reader :configuration_name
 
-      # @return [XcodeArchiveCache::Injection::Storage]
+      # @return [:Storage]
       # 
       attr_reader :storage
 
-      # @return [Logger]
-      # 
-      attr_reader :logger
+      # @return [HeadersMover]
+      #
+      attr_reader :headers_mover
 
-      FRAMEWORK_SEARCH_PATHS_KEY = "FRAMEWORK_SEARCH_PATHS"
-      OTHER_CFLAGS_KEY = "OTHER_CFLAGS"
-      INHERITED_SETTINGS_VALUE = "$(inherited)"
+      # @return [DependencyRemover]
+      #
+      attr_reader :dependency_remover
+
+      # @return [BuildFlagsChanger]
+      #
+      attr_reader :build_flags_changer
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
+      #
+      def add_as_prebuilt_to_dependents(prebuilt_node)
+        dependent_nodes = prebuilt_node.dependent + nodes_to_propagate_to(prebuilt_node)
+        dependent_nodes.each do |dependent_node|
+          add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, true)
+        end
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      def nodes_to_propagate_to(node)
+        return [] unless node.has_static_library_product?
+
+        # propagate static library to all dependent nodes
+        # with targets from the same project
+        node.all_dependent_nodes.select {|dependent_node| node.native_target.project == dependent_node.native_target.project}
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
+      # @param [Boolean] always_link
+      #
+      def add_as_prebuilt_dependency(prebuilt_node, dependent_target, always_link = false)
+        return if prebuilt_node.rebuild
+
+        debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
+
+        if prebuilt_node.has_framework_product?
+          add_as_prebuilt_framework(prebuilt_node, dependent_target)
+        elsif prebuilt_node.has_static_library_product?
+          add_as_prebuilt_static_lib(prebuilt_node, dependent_target, always_link)
+        else
+          raise ArgumentError.new, "#{prebuilt_node.name} has unsupported product type: #{prebuilt_node.native_target.product_type}"
+        end
+
+        debug("done with #{prebuilt_node.name} for #{dependent_target.display_name}")
+      end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
       #
       def add_as_prebuilt_framework(prebuilt_node, dependent_target)
-        build_configuration = dependent_target.build_configurations.select {|configuration| configuration.name == configuration_name}.first
+        build_configuration = find_build_configuration(dependent_target)
+
+        artifact_location = storage.get_storage_path(prebuilt_node)
+        build_flags_changer.add_framework_search_path(build_configuration, artifact_location)
+        build_flags_changer.add_framework_linker_flag(build_configuration, prebuilt_node)
+        build_flags_changer.add_framework_headers_iquote(build_configuration, artifact_location, prebuilt_node)
+
+        # remove headers so they don't cause non-module includes
+        headers_mover.delete_headers(prebuilt_node)
+
+        dependency_remover.remove_dependency(prebuilt_node, dependent_target)
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
+      # @param [Boolean] always_link
+      #
+      def add_as_prebuilt_static_lib(prebuilt_node, dependent_target, always_link)
+        build_configuration = find_build_configuration(dependent_target)
+
+        if always_link || prebuilt_node.is_root
+          artifact_location = storage.get_storage_path(prebuilt_node)
+          build_flags_changer.add_library_search_path(build_configuration, artifact_location)
+          build_flags_changer.add_library_linker_flag(build_configuration, prebuilt_node)
+        end
+
+        headers_mover.prepare_headers_for_injection(prebuilt_node)
+        build_flags_changer.add_headers_search_path(build_configuration, storage.headers_storage_dir)
+        build_flags_changer.add_iquote_path(build_configuration, storage.headers_storage_dir)
+        build_flags_changer.add_capital_i_path(build_configuration, storage.headers_storage_dir)
+
+        dependency_remover.remove_dependency(prebuilt_node, dependent_target)
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      #
+      def find_build_configuration(target)
+        build_configuration = target.build_configurations.select {|configuration| configuration.name == configuration_name}.first
         unless build_configuration
           raise ArgumentError.new, "#{configuration_name} build configuration not found on target #{node.name}"
         end
 
-        artifact_location = storage.get_storage_path(prebuilt_node)
-        search_path = path_to_search_path(artifact_location)
-        logger.debug("using search path #{search_path}")
-        add_framework_search_path(build_configuration, search_path)
-
-        headers_search_path = path_to_iquote(artifact_location, prebuilt_node)
-        logger.debug("using headers search path #{headers_search_path}")
-        add_headers_search_path(build_configuration, headers_search_path)
-
-        remove_framework_dependency(prebuilt_node.native_target, dependent_target)
-
-        logger.debug("added prebuilt framework at #{search_path} to #{configuration_name} configuration of #{dependent_target.display_name}")
-      end
-
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
-      def propagate_node(node)
-        logger.debug("propagating #{node.name}")
-
-        if node.rebuild
-          # node should be rebuilt, so we shouldn't point dependants to the cached artifact
-          # because there's no such artifact
-          #
-          logger.debug("#{node.name} should be rebuilt, skipping")
-          return
-        end
-
-        if node.has_framework_product?
-          logger.debug("product is a framework")
-
-          # add to framework search paths of dependents
-          propagate_framework(node, node)
-
-          # remove headers so they don't cause non-module includes
-          delete_headers(node)
-        elsif node.has_static_library_product?
-          logger.debug("product is a static library")
-
-          # TODO: add to library search paths of dependents
-          raise StandardError.new, "Static libraries not supported yet"
-        else
-          raise ArgumentError.new, "Unsupported cached product type for #{node.name}: #{node.native_target.product_type}"
-        end
-
-        logger.debug("done propagating #{node.name}")
-      end
-
-      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
-      # @param [XcodeArchiveCache::BuildGraph::Node] dependent_node
-      #
-      def propagate_framework(prebuilt_node, dependent_node)
-        dependent_node.dependent.each do |node|
-          propagate_prebuilt_framework(prebuilt_node, node)
-        end
-      end
-
-      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
-      def propagate_prebuilt_framework(prebuilt_node, node)
-        if node.rebuild
-          add_as_prebuilt_framework(prebuilt_node, node.native_target)
-        end
-
-        # add to upper level dependencies too
-        propagate_framework(prebuilt_node, node)
-      end
-
-      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
-      # @param [String] search_path
-      #
-      def add_framework_search_path(build_configuration, search_path)
-        framework_search_paths = build_configuration.build_settings[FRAMEWORK_SEARCH_PATHS_KEY]
-        if framework_search_paths && framework_search_paths.length > 0
-          if framework_search_paths.is_a?(String)
-            framework_search_paths = [framework_search_paths, search_path]
-          elsif framework_search_paths.is_a?(Array)
-            framework_search_paths += [search_path]
-          else
-            raise StandardError.new, "Framework search paths value is neither string nor array: #{framework_search_paths.class}"
-          end
-        else
-          framework_search_paths = [INHERITED_SETTINGS_VALUE, search_path]
-        end
-
-        build_configuration.build_settings[FRAMEWORK_SEARCH_PATHS_KEY] = framework_search_paths
-      end
-
-      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
-      # @param [String] search_path
-      #
-      def add_headers_search_path(build_configuration, search_path)
-        cflags = build_configuration.build_settings[OTHER_CFLAGS_KEY]
-        if cflags && cflags.length > 0
-          if cflags.is_a?(String)
-            cflags = [cflags, search_path]
-          elsif cflags.is_a?(Array)
-            cflags += [search_path]
-          else
-            raise StandardError.new, "Other C flags value is neither string nor array: #{cflags.class}"
-          end
-        else
-          cflags = [INHERITED_SETTINGS_VALUE, search_path]
-        end
-
-        build_configuration.build_settings[OTHER_CFLAGS_KEY] = cflags
-      end
-
-      # @param [Xcodeproj::Project::Object::PBXNativeTarget] prebuilt_target
-      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
-      #
-      def remove_framework_dependency(prebuilt_target, dependent_target)
-        # remove from "Link binary with libraries"
-        frameworks = dependent_target.frameworks_build_phase.files.select do |file|
-          file.display_name == prebuilt_target.product_reference.name
-        end
-
-        if frameworks.length > 0
-          frameworks.each do |framework|
-            dependent_target.frameworks_build_phase.remove_file_reference(framework.file_ref)
-          end
-        end
-
-        # remove from "Target dependencies"
-        dependent_target.dependencies.delete_if {|dependency| dependency.target.uuid == prebuilt_target.uuid}
-      end
-
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
-      def delete_headers(node)
-        logger.debug("deleting headers of #{node.name}")
-        node.native_target.headers_build_phase.files.clear
-      end
-
-      # @param [String] path
-      # @return [String]
-      #
-      def path_to_search_path(path)
-        "\"#{path}\""
-      end
-
-      # @param [String] path
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      # @return [String]
-      #
-      def path_to_iquote(path, node)
-        if node.has_framework_product?
-          search_path = File.join(path, File.basename(node.native_target.product_reference.name), "Headers")
-          "-iquote \"#{search_path}\""
-        end
+        build_configuration
       end
     end
   end

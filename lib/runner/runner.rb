@@ -1,5 +1,6 @@
 module XcodeArchiveCache
   class Runner
+    include Logs
 
     # @param [Hash{String => Hash}] config
     #
@@ -21,7 +22,7 @@ module XcodeArchiveCache
       @product_extractor = XcodeArchiveCache::Build::ProductExtractor.new(config[:configuration], config[:derived_data_path])
 
       @injection_storage = XcodeArchiveCache::Injection::Storage.new(@unpacked_artifacts_dir)
-      @injector = XcodeArchiveCache::Injection::Injector.new(config[:configuration], @injection_storage, @logger)
+      @injector = XcodeArchiveCache::Injection::Injector.new(config[:configuration], @injection_storage)
     end
 
     def run
@@ -68,13 +69,14 @@ module XcodeArchiveCache
         exit 1
       end
 
-      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(dependency_target.project.path, @config[:configuration], dependency_target.platform_name)
-      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(xcodebuild_executor, @logger)
+      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(@config[:configuration], dependency_target.platform_name)
+      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@projects, xcodebuild_executor, @logger)
       graph = graph_builder.build_graph(dependency_target)
+
       evaluate_for_rebuild(graph)
       extract_cached_artifacts(graph)
-      perform_rebuild(dependency_target, graph)
-      @injector.inject_in_dependent(graph, target)
+      rebuild_if_needed(dependency_target, graph)
+      @injector.perform_outgoing_injection(graph, target)
 
       if dependency_config[:embed_frameworks_script]
         pods_fixer = XcodeArchiveCache::Pods::Fixer.new
@@ -104,18 +106,18 @@ module XcodeArchiveCache
     # @param [Xcodeproj::Project::Object::PBXNativeTarget] root_target
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
-    def perform_rebuild(root_target, graph)
-      rebuild_performer = XcodeArchiveCache::Build::Performer.new(@logger)
+    def rebuild_if_needed(root_target, graph)
+      rebuild_performer = XcodeArchiveCache::Build::Performer.new(@logger, @config[:derived_data_path])
       return unless rebuild_performer.should_rebuild?(graph)
 
-      @injector.inject_in_graph(graph)
-      rebuild_performer.rebuild_missing(root_target, graph)
+      @injector.perform_internal_injection(graph)
+      rebuild_performer.rebuild_missing(@config[:configuration], root_target, graph)
 
       graph.nodes.each do |node|
         next unless node.rebuild
 
         file_paths = @product_extractor.list_product_contents(root_target.name, node)
-        @injection_storage.store(node, file_paths)
+        @injection_storage.store_products(node, file_paths)
         @cache_storage.store(node, @injection_storage.get_storage_path(node))
       end
     end

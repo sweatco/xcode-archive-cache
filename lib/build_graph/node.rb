@@ -1,9 +1,14 @@
 module XcodeArchiveCache
   module BuildGraph
     class Node
+
       # @return [String] native target display name
       #
       attr_reader :name
+
+      # @return [Boolean]
+      #
+      attr_reader :is_root
 
       # @return [Bool] should target be rebuilt
       #
@@ -31,10 +36,12 @@ module XcodeArchiveCache
 
       # @param [String] name
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] native_target
+      # @param [Boolean] is_root
       #
-      def initialize(name, native_target)
+      def initialize(name, native_target, is_root = false)
         @name = name
         @native_target = native_target
+        @is_root = is_root
         @dependent = []
         @dependencies = []
       end
@@ -47,11 +54,39 @@ module XcodeArchiveCache
         native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
       end
 
+      # @return [String]
+      #
+      def product_file_name
+        product_file_name = nil
+
+        product_name = native_target.product_reference.name
+        if has_framework_product? && product_name
+          product_file_name = product_name
+        end
+
+        if product_file_name == nil
+          product_file_name = File.basename(native_target.product_reference.real_path)
+        end
+
+        product_file_name
+      end
+
+      # @return [Array<Node>]
+      #         Direct + transitive dependents
+      #
+      def all_dependent_nodes
+        (dependent + dependent.map(&:all_dependent_nodes)).flatten.uniq
+      end
+
+      def ==(other_node)
+        other_node && native_target.uuid == other_node.native_target.uuid && native_target.project == other_node.native_target.project
+      end
+
       def to_s
         sha_string = sha ? sha : "<none>"
         dependent_names = dependent.length > 0 ? dependent.map(&:name).join(", ") : "<none>"
         dependency_names = dependencies.length > 0 ? dependencies.map(&:name).join(", ") : "<none>"
-        "#{name}\n\tsha: #{sha_string}\n\trebuild: #{rebuild}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
+        "#{name}\n\troot: #{is_root}\n\tproduct: #{product_file_name}\n\tsha: #{sha_string}\n\trebuild: #{rebuild}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
       end
     end
   end

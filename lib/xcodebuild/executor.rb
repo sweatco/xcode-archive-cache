@@ -2,17 +2,17 @@ module XcodeArchiveCache
   module Xcodebuild
     class Executor
 
-      # @param [String] project_path
       # @param [String] configuration
       # @param [String] platform
       #
-      def initialize(project_path, configuration, platform)
-        @project_path = project_path
+      def initialize(configuration, platform)
         @configuration = configuration
         @platform = platform
       end
 
-      def load_build_settings
+      # @param [String] project_path
+      #
+      def load_build_settings(project_path)
         # TODO: extract command builder
         command = "xcodebuild -project #{project_path} -configuration #{configuration} -destination 'generic/platform=#{platform}' -alltargets -showBuildSettings archive"
         output, status = Open3.capture2e(command)
@@ -24,18 +24,15 @@ module XcodeArchiveCache
         output
       end
 
+      # @param [String] project_path
       # @param [String] scheme
       # @param [String] derived_data_path
       #
-      def build(scheme, derived_data_path)
+      def build(project_path, scheme, derived_data_path)
         system "set -exo pipefail && xcodebuild -project #{project_path} -configuration #{configuration} -destination 'generic/platform=#{platform}' -scheme #{scheme} -derivedDataPath #{derived_data_path} archive | xcpretty"
       end
 
       private
-
-      # @return [String]
-      #
-      attr_reader :project_path
 
       # @return [String]
       #

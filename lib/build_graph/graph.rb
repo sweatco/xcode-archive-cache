@@ -1,7 +1,7 @@
 module XcodeArchiveCache
   module BuildGraph
     class Graph
-      # @return [Array<XcodeArchiveCache::BuildGraph::Node>] graph nodes
+      # @return [Array<Node>] graph nodes
       #
       attr_reader :nodes
 

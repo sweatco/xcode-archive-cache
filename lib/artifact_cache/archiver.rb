@@ -2,6 +2,8 @@ module XcodeArchiveCache
   module ArtifactCache
     class Archiver
 
+      include XcodeArchiveCache::Logs
+
       # @param [String] path
       # @param [String] destination
       #
@@ -50,6 +52,8 @@ module XcodeArchiveCache
       # @param [String] destination
       #
       def archive_single_file(path, destination)
+        info("archiving #{path}")
+
         Zip::File.open(destination, Zip::File::CREATE) do |archive|
           archive.add(File.basename(path), path)
         end
@@ -59,6 +63,8 @@ module XcodeArchiveCache
       # @param [String] destination
       #
       def archive_directory(path, destination)
+        info("archiving #{path}")
+
         Zip::File.open(destination, Zip::File::CREATE) do |archive|
           add_entries(list_entries_in_directory(path), path, archive)
         end
