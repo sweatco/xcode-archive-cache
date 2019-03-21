@@ -12,6 +12,8 @@ require 'digest'
 require 'xcodeproj'
 require 'open3'
 
+require 'logs/logs'
+
 require 'build_graph/graph'
 require 'build_graph/node'
 require 'build_graph/builder'
@@ -31,8 +33,6 @@ require 'build/product_extractor'
 require 'build_settings/filter'
 require 'build_settings/loader'
 require 'build_settings/extractor'
-
-require 'logs/logs'
 
 require 'pods/fixer'
 
