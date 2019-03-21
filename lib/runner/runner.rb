@@ -1,12 +1,12 @@
 module XcodeArchiveCache
   class Runner
-    include Logs
+
+    include XcodeArchiveCache::Logs
 
     # @param [Hash{String => Hash}] config
     #
     def initialize(config)
       @config = config
-      @logger = Logger.new(STDOUT)
 
       workspace_path = File.absolute_path(config[:workspace])
       workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
@@ -38,7 +38,7 @@ module XcodeArchiveCache
     def handle_target(target_config)
       target = find_target(target_config[:name])
       unless target
-        puts "target not found for #{target_config[:name]}"
+        error("target not found for #{target_config[:name]}")
         exit 1
       end
 
@@ -61,16 +61,16 @@ module XcodeArchiveCache
     #
     def handle_dependency(target, dependency_config)
       dependency_name = dependency_config[:name]
-      @logger.info("checking #{dependency_name}")
+      info("checking #{dependency_name}")
 
       dependency_target = find_target(dependency_name)
       unless dependency_target
-        @logger.error("target not found for #{dependency_name} of #{target.display_name}")
+        error("target not found for #{dependency_name} of #{target.display_name}")
         exit 1
       end
 
       xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(@config[:configuration], dependency_target.platform_name)
-      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@projects, xcodebuild_executor, @logger)
+      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@projects, xcodebuild_executor)
       graph = graph_builder.build_graph(dependency_target)
 
       evaluate_for_rebuild(graph)
@@ -107,7 +107,7 @@ module XcodeArchiveCache
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
     def rebuild_if_needed(root_target, graph)
-      rebuild_performer = XcodeArchiveCache::Build::Performer.new(@logger, @config[:derived_data_path])
+      rebuild_performer = XcodeArchiveCache::Build::Performer.new(@config[:derived_data_path])
       return unless rebuild_performer.should_rebuild?(graph)
 
       @injector.perform_internal_injection(graph)

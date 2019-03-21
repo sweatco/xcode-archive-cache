@@ -2,12 +2,12 @@ module XcodeArchiveCache
   module BuildGraph
     class Builder
 
+      include XcodeArchiveCache::Logs
+
       # @param [XcodeArchiveCache::Xcodebuild::Executor] xcodebuild_executor
-      # @param [Logger] logger
       #
-      def initialize(projects, xcodebuild_executor, logger)
+      def initialize(projects, xcodebuild_executor)
         @build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(xcodebuild_executor)
-        @logger = logger
         @native_target_finder = NativeTargetFinder.new(projects)
         @sha_calculator = NodeShaCalculator.new
       end
@@ -33,10 +33,6 @@ module XcodeArchiveCache
       #
       attr_accessor :build_settings_loader
 
-      # @return [Logger]
-      #
-      attr_accessor :logger
-
       # @return [XcodeArchive::BuildGraph::NativeTargetFinder]
       #
       attr_accessor :native_target_finder
@@ -54,7 +50,7 @@ module XcodeArchiveCache
       # @return [Node] new or existing node
       #
       def add_to_graph(target, graph, is_root, target_stack = [])
-        logger.debug("traversing #{target.display_name}")
+        debug("traversing #{target.display_name}")
 
         unless target
           raise ArgumentError.new, "Target is required"
@@ -63,7 +59,7 @@ module XcodeArchiveCache
         display_name = target.display_name
         existing_node = graph.node_by_name(display_name)
         if existing_node
-          logger.debug("already added this one")
+          debug("already added this one")
           return existing_node
         end
 
@@ -74,10 +70,10 @@ module XcodeArchiveCache
 
         node = graph.node_by_name(display_name)
         if node
-          logger.debug("already traversed this one")
+          debug("already traversed this one")
           return node
         else
-          logger.debug("adding new node")
+          debug("adding new node")
           node = Node.new(display_name, target, is_root)
           graph.nodes.push(node)
         end
@@ -90,18 +86,18 @@ module XcodeArchiveCache
 
         # PBXNativeTarget has no custom equality check
         deduplicated_targets = dependency_targets.compact.uniq {|dependency_target| dependency_target.uuid + dependency_target.display_name}
-        logger.debug("dependency targets: #{deduplicated_targets.map(&:display_name)}")
+        debug("dependency targets: #{deduplicated_targets.map(&:display_name)}")
 
         deduplicated_targets.each do |dependency_target|
           dependency_node = add_to_graph(dependency_target, graph, false, target_stack)
 
           unless dependency_node.dependent.include?(node)
-            logger.debug("adding #{node.name} as dependent to #{dependency_node.name}")
+            debug("adding #{node.name} as dependent to #{dependency_node.name}")
             dependency_node.dependent.push(node)
           end
 
           unless dependencies.include?(dependency_node)
-            logger.debug("adding #{dependency_node.name} as dependency to #{node.name}")
+            debug("adding #{dependency_node.name} as dependency to #{node.name}")
             dependencies.push(dependency_node)
           end
         end
@@ -109,7 +105,7 @@ module XcodeArchiveCache
         target_stack.pop
         node.dependencies.push(*dependencies)
 
-        logger.debug("done with #{target.display_name}")
+        debug("done with #{target.display_name}")
         node
       end
 
@@ -117,9 +113,9 @@ module XcodeArchiveCache
       #
       def calculate_shas(graph)
         graph.nodes.each do |node|
-          logger.debug("calculating sha for #{node.name}")
+          debug("calculating sha for #{node.name}")
           sha_calculator.calculate(node)
-          logger.debug("sha calculated for #{node.name}")
+          debug("sha calculated for #{node.name}")
         end
       end
 
@@ -129,7 +125,7 @@ module XcodeArchiveCache
         counter = 1
 
         graph.nodes.each do |node|
-          logger.debug("loading settings for #{node.name}")
+          info("loading settings for #{node.name}")
 
           project_path = node.native_target.project.path
           build_settings_loader.load_settings(project_path)
@@ -141,7 +137,7 @@ module XcodeArchiveCache
 
           node.build_settings = node_settings
 
-          logger.debug("settings loaded for #{node.name} (#{counter} / #{graph.nodes.length})")
+          debug("settings loaded for #{node.name} (#{counter} / #{graph.nodes.length})")
           counter += 1
         end
       end

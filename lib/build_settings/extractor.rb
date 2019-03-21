@@ -1,6 +1,7 @@
 module XcodeArchiveCache
   module BuildSettings
     class Extractor
+
       def initialize
         @regex = /.+TARGETNAME\s=\s(?<target>.+)/
         @filter = Filter.new
@@ -37,6 +38,8 @@ module XcodeArchiveCache
       attr_reader :filter
 
       # @param [String] target_settings
+      #
+      # @return [[String, Array<String>]]
       #
       def parse(target_settings)
         stripped = target_settings.strip

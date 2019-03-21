@@ -1,6 +1,7 @@
 module XcodeArchiveCache
   module BuildGraph
     class NodeShaCalculator
+
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def calculate(node)

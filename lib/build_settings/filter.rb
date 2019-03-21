@@ -1,6 +1,7 @@
 module XcodeArchiveCache
   module BuildSettings
     class Filter
+
       # TODO: extend
       SETTINGS_TO_KEEP = %w(ACTION ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES)
 
