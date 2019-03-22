@@ -34,9 +34,8 @@ require 'build_settings/filter'
 require 'build_settings/loader'
 require 'build_settings/extractor'
 
-require 'pods/fixer'
-
 require 'injection/injector'
+require 'injection/pods_script_fixer'
 require 'injection/build_flags_changer'
 require 'injection/dependency_remover'
 require 'injection/headers_mover'
@@ -57,12 +56,12 @@ config = {
     :derived_data_path => "build",
     :targets => [{
                      :name => "swc",
-                     :cached_dependencies => [{:name => "libSweatcoinReact.a"},
-                                              {:name => "Pods_swc.framework", :embed_frameworks_script => "Pods/Target Support Files/Pods-swc/Pods-swc-frameworks.sh"}]
+                     :cached_dependencies => [{:name => "Pods_swc.framework", :pods_target => true},
+                                              {:name => "libSweatcoinReact.a"}]
                  },
                  {
                      :name => "watch-extension",
-                     :cached_dependencies => [{:name => "Pods_watch_extension.framework", :embed_frameworks_script => "Pods/Target Support Files/Pods-watch-extension/Pods-watch-extension-frameworks.sh"}]
+                     :cached_dependencies => [{:name => "Pods_watch_extension.framework", :pods_target => true}]
                  }]
 }
 

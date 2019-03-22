@@ -76,12 +76,7 @@ module XcodeArchiveCache
       evaluate_for_rebuild(graph)
       extract_cached_artifacts(graph)
       rebuild_if_needed(dependency_target, graph)
-      @injector.perform_outgoing_injection(graph, target)
-
-      if dependency_config[:embed_frameworks_script]
-        pods_fixer = XcodeArchiveCache::Pods::Fixer.new
-        pods_fixer.fix_embed_frameworks_script(dependency_config[:embed_frameworks_script], @unpacked_artifacts_dir)
-      end
+      @injector.perform_outgoing_injection(graph, target, dependency_config[:pods_target])
     end
 
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph

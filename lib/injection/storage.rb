@@ -4,13 +4,17 @@ module XcodeArchiveCache
 
       # @return [String]
       #
-      attr_reader :headers_storage_dir
+      attr_reader :container_dir_path
+
+      # @return [String]
+      #
+      attr_reader :headers_storage_dir_path
 
       # @param [String] path
       #
       def initialize(path)
         @container_dir_path = path
-        @headers_storage_dir = File.join(path, HEADERS_STORAGE_ROOT_DIR)
+        @headers_storage_dir_path = File.join(path, HEADERS_STORAGE_ROOT_DIR)
 
         prepare_container_dir
       end
@@ -69,10 +73,6 @@ module XcodeArchiveCache
 
       HEADERS_STORAGE_ROOT_DIR = "include"
 
-      # @return [String]
-      #
-      attr_reader :container_dir_path
-
       def prepare_container_dir
         if File.exist?(container_dir_path)
           FileUtils.rm_rf(container_dir_path)
@@ -84,7 +84,7 @@ module XcodeArchiveCache
       # @return [String]
       #
       def get_headers_storage_path(node)
-        File.join(headers_storage_dir, node.name)
+        File.join(headers_storage_dir_path, node.name)
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
@@ -94,7 +94,7 @@ module XcodeArchiveCache
       def get_headers_symlink_path(node)
         project_name = node.native_target.project.root_object.name
         if node.name.include?(project_name)
-          File.join(headers_storage_dir, project_name)
+          File.join(headers_storage_dir_path, project_name)
         end
       end
     end
