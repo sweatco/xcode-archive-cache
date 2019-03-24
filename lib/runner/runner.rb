@@ -3,47 +3,54 @@ module XcodeArchiveCache
 
     include XcodeArchiveCache::Logs
 
-    # @param [Hash{String => Hash}] config
+    # @param [XcodeArchiveCache::Config::Entry] config
     #
     def initialize(config)
       @config = config
 
-      workspace_path = File.absolute_path(config[:workspace])
+      workspace_path = File.absolute_path(config.file_path)
       workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
       workspace_dir = File.expand_path("..", workspace_path)
 
       @projects = workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
 
-      @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(config[:cache_storage][:local_dir])
+      storage_path = File.absolute_path(config.storage.path)
+      @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(storage_path)
       @rebuild_evaluator = XcodeArchiveCache::BuildGraph::RebuildEvaluator.new(@cache_storage)
 
-      @unpacked_artifacts_dir = File.absolute_path(File.join(config[:derived_data_path], "cached"))
       @artifact_extractor = XcodeArchiveCache::ArtifactCache::ArtifactExtractor.new(@cache_storage)
-      @product_extractor = XcodeArchiveCache::Build::ProductExtractor.new(config[:configuration], config[:derived_data_path])
 
-      @injection_storage = XcodeArchiveCache::Injection::Storage.new(@unpacked_artifacts_dir)
-      @injector = XcodeArchiveCache::Injection::Injector.new(config[:configuration], @injection_storage)
+      derived_data_path = File.absolute_path(config.build_settings.derived_data_path)
+      @product_extractor = XcodeArchiveCache::Build::ProductExtractor.new(config.build_settings.configuration, derived_data_path)
+
+      unpacked_artifacts_dir = File.absolute_path(File.join(derived_data_path, "cached"))
+      @injection_storage = XcodeArchiveCache::Injection::Storage.new(unpacked_artifacts_dir)
+      @injector = XcodeArchiveCache::Injection::Injector.new(config.build_settings.configuration, @injection_storage)
     end
 
     def run
-      @config[:targets].each do |target_config|
+      config.targets.each do |target_config|
         handle_target(target_config)
       end
     end
 
     private
 
-    # @param [Hash{String => Hash}] target_config
+    # @return [XcodeArchiveCache::Config::Entry]
+    #
+    attr_reader :config
+
+    # @param [XcodeArchiveCache::Config::Target] target_config
     #
     def handle_target(target_config)
-      target = find_target(target_config[:name])
+      target = find_target(target_config.name)
       unless target
-        error("target not found for #{target_config[:name]}")
+        error("target not found for #{target_config.name}")
         exit 1
       end
 
-      target_config[:cached_dependencies].each do |dependency_config|
-        handle_dependency(target, dependency_config)
+      target_config.dependencies.each do |dependency_name|
+        handle_dependency(target, dependency_name)
       end
     end
 
@@ -51,16 +58,17 @@ module XcodeArchiveCache
     #
     def find_target(product_name)
       @projects.each do |project|
-        target = project.native_targets.select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}.first
+        target = project.native_targets
+                     .select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
+                     .first
         return target if target
       end
     end
 
     # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
-    # @param [Hash] dependency_config
+    # @param [String] dependency_name
     #
-    def handle_dependency(target, dependency_config)
-      dependency_name = dependency_config[:name]
+    def handle_dependency(target, dependency_name)
       info("checking #{dependency_name}")
 
       dependency_target = find_target(dependency_name)
@@ -69,14 +77,14 @@ module XcodeArchiveCache
         exit 1
       end
 
-      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(@config[:configuration], dependency_target.platform_name)
+      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.build_settings.configuration, dependency_target.platform_name)
       graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@projects, xcodebuild_executor)
       graph = graph_builder.build_graph(dependency_target)
 
       evaluate_for_rebuild(graph)
       extract_cached_artifacts(graph)
       rebuild_if_needed(dependency_target, graph)
-      @injector.perform_outgoing_injection(graph, target, dependency_config[:pods_target])
+      @injector.perform_outgoing_injection(graph, target)
     end
 
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
@@ -102,11 +110,11 @@ module XcodeArchiveCache
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
     def rebuild_if_needed(root_target, graph)
-      rebuild_performer = XcodeArchiveCache::Build::Performer.new(@config[:derived_data_path])
+      rebuild_performer = XcodeArchiveCache::Build::Performer.new(config.build_settings.derived_data_path)
       return unless rebuild_performer.should_rebuild?(graph)
 
       @injector.perform_internal_injection(graph)
-      rebuild_performer.rebuild_missing(@config[:configuration], root_target, graph)
+      rebuild_performer.rebuild_missing(config.build_settings.configuration, root_target, graph)
 
       graph.nodes.each do |node|
         next unless node.rebuild

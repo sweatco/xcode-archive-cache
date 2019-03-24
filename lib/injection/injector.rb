@@ -13,6 +13,7 @@ module XcodeArchiveCache
         @headers_mover = HeadersMover.new(storage)
         @dependency_remover = DependencyRemover.new
         @build_flags_changer = BuildFlagsChanger.new
+        @pods_fixer = PodsScriptFixer.new
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
@@ -28,13 +29,9 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
-      def perform_outgoing_injection(graph, target, is_pods_injection)
+      def perform_outgoing_injection(graph, target)
         graph.nodes.each {|node| add_as_prebuilt_dependency(node, target)}
-
-        if is_pods_injection
-          pods_fixer = XcodeArchiveCache::Injection::PodsScriptFixer.new
-          pods_fixer.fix_embed_frameworks_script(target, storage.container_dir_path)
-        end
+        pods_fixer.fix_embed_frameworks_script(target, storage.container_dir_path)
 
         target.project.save
       end
@@ -60,6 +57,10 @@ module XcodeArchiveCache
       # @return [BuildFlagsChanger]
       #
       attr_reader :build_flags_changer
+
+      # @return [PodsScriptFixer]
+      #
+      attr_reader :pods_fixer
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       #

@@ -14,6 +14,9 @@ require 'open3'
 
 require 'logs/logs'
 
+require 'config/dsl'
+require 'config/config'
+
 require 'build_graph/graph'
 require 'build_graph/node'
 require 'build_graph/builder'
@@ -47,23 +50,7 @@ require 'shell/executor'
 
 require 'xcodebuild/executor'
 
-config = {
-    :workspace => "swc.xcworkspace",
-    :configuration => "Internal",
-    :cache_storage => {
-        :local_dir => "build_cache"
-    },
-    :derived_data_path => "build",
-    :targets => [{
-                     :name => "swc",
-                     :cached_dependencies => [{:name => "Pods_swc.framework", :pods_target => true},
-                                              {:name => "libSweatcoinReact.a"}]
-                 },
-                 {
-                     :name => "watch-extension",
-                     :cached_dependencies => [{:name => "Pods_watch_extension.framework", :pods_target => true}]
-                 }]
-}
+config = XcodeArchiveCache::Config.from_file("Cachefile").current_configuration
 
 runner = XcodeArchiveCache::Runner.new(config)
 runner.run
