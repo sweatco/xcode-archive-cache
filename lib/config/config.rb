@@ -1,10 +1,13 @@
 module XcodeArchiveCache
   class Config
-    class Workspace
+
+    include XcodeArchiveCache::Config::DSL
+
+    class Entry
 
       # @return [String]
       #
-      attr_reader :path
+      attr_reader :name
 
       # @return [Array<Target>]
       #
@@ -18,15 +21,42 @@ module XcodeArchiveCache
       #
       attr_reader :storage
 
-      def initialize(path)
-        @path = path
+      def initialize(name)
+        @name = name
         @build_settings = BuildSettings.new
         @storage = Storage.new
         @targets = []
+        @file_extname = ""
+      end
+
+      # @return [String]
+      #
+      def file_path
+        return name if File.extname(name) == file_extname
+
+        name + file_extname
       end
 
       def to_s
-        "path: #{path}\n#{build_settings}\nstorage: #{storage}\ntargets:\n\t#{targets.join("\n\t")}"
+        "path: #{file_path}\n#{build_settings}\nstorage: #{storage}\ntargets:\n\t#{targets.join("\n\t")}"
+      end
+
+      private
+
+      attr_reader :file_extname
+    end
+
+    class Workspace < Entry
+      def initialize(path)
+        super(path)
+        @file_extname = ".xcworkspace"
+      end
+    end
+
+    class Project < Entry
+      def initialize(path)
+        super(path)
+        @file_extname = ".xcodeproj"
       end
     end
 
@@ -66,7 +96,7 @@ module XcodeArchiveCache
       #
       attr_reader :name
 
-      # @return [Array<Dependency>]
+      # @return [Array<String>]
       #
       attr_reader :dependencies
 
@@ -78,30 +108,7 @@ module XcodeArchiveCache
       end
 
       def to_s
-        "name: #{name}, dependencies: #{dependencies.join("\n\t")}"
-      end
-    end
-
-    class Dependency
-
-      # @return [String]
-      #
-      attr_accessor :name
-
-      # @return [Boolean]
-      #
-      attr_accessor :pods_target
-
-      # @param [String] name
-      # @param [Boolean] pods_target
-      #
-      def initialize(name, pods_target)
-        @name = name
-        @pods_target = pods_target
-      end
-
-      def to_s
-        "name: #{name}, pods target: #{pods_target}"
+        "name: #{name}, dependencies: #{dependencies.join(", ")}"
       end
     end
 
@@ -115,6 +122,7 @@ module XcodeArchiveCache
           eval(contents, nil, path)
         rescue Exception => e
           puts "invalid #{File.basename(path)} file: #{e.message}"
+          exit 1
         end
       end
 
@@ -127,54 +135,21 @@ module XcodeArchiveCache
 
     def initialize(&block)
       @current_configuration = nil
+      @current_target = nil
 
       if block
         instance_eval(&block)
       end
     end
 
-    # @param [String] path
+    private
+
+    attr_writer :current_configuration
+
+    # @return [Target]
     #
-    def workspace(path)
-      @current_configuration = Workspace.new(path)
-
-      yield
-    end
-
-    # @param [String] name
-    #
-    def configuration(name)
-      @current_configuration.build_settings.configuration = name
-    end
-
-    # @param [String] path
-    #
-    def derived_data_path(path)
-      @current_configuration.build_settings.derived_data_path = path
-    end
-
-    # @param [String] path
-    #
-    def local_storage(path)
-      @current_configuration.storage.type = :local
-      @current_configuration.storage.path = path
-    end
-
-    # @return [String]
-    #
-    def target(name)
-      @current_target = Target.new(name)
-      @current_configuration.targets.push(@current_target)
-
-      yield
-    end
-
-    # @param [String] name
-    # @param [Boolean] as_pods_target
-    #
-    def cache(name, as_pods_target: false)
-      dependency = Dependency.new(name, as_pods_target)
-      @current_target.dependencies.push(dependency)
+    def current_target
+      current_configuration.targets.last
     end
   end
 end
