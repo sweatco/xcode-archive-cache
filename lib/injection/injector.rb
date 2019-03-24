@@ -131,9 +131,12 @@ module XcodeArchiveCache
         end
 
         headers_mover.prepare_headers_for_injection(prebuilt_node)
-        build_flags_changer.add_headers_search_path(build_configuration, storage.headers_storage_dir_path)
-        build_flags_changer.add_iquote_path(build_configuration, storage.headers_storage_dir_path)
-        build_flags_changer.add_capital_i_path(build_configuration, storage.headers_storage_dir_path)
+
+        storage.get_all_headers_storage_paths(prebuilt_node)&.each do |path|
+          build_flags_changer.add_headers_search_path(build_configuration, path)
+          build_flags_changer.add_iquote_path(build_configuration, path)
+          build_flags_changer.add_capital_i_path(build_configuration, path)
+        end
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
       end

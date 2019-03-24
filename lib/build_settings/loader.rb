@@ -1,5 +1,28 @@
 module XcodeArchiveCache
   module BuildSettings
+    class Container
+
+      # @return [Hash{String => String}]
+      #
+      attr_reader :all
+
+      # @return [Hash{String => String}]
+      #
+      attr_reader :filtered
+
+      # @param [Hash{String => String}] all
+      # @param [Hash{String => String}] filtered
+      #
+      def initialize(all, filtered)
+        @all = all
+        @filtered = filtered
+      end
+
+      def [](name)
+        all[name]
+      end
+    end
+
     class Loader
 
       # @param [Xcodebuild::Executor.new] executor

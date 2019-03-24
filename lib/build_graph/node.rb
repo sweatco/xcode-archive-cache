@@ -30,7 +30,7 @@ module XcodeArchiveCache
       #
       attr_reader :native_target
 
-      # @return [String] filtered `xcodebuild -showBuildSettings` output
+      # @return [XcodeArchiveCache::BuildSettings::Container]
       #
       attr_accessor :build_settings
 
