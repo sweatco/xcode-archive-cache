@@ -31,7 +31,10 @@ module XcodeArchiveCache
       #
       def perform_outgoing_injection(graph, target)
         graph.nodes.each {|node| add_as_prebuilt_dependency(node, target)}
-        pods_fixer.fix_embed_frameworks_script(target, storage.container_dir_path)
+
+        if graph.node_by_name(get_pods_target_name(target))
+          pods_fixer.fix_embed_frameworks_script(target, graph.dependent_build_settings, storage.container_dir_path)
+        end
 
         target.project.save
       end
@@ -151,6 +154,12 @@ module XcodeArchiveCache
         end
 
         build_configuration
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      #
+      def get_pods_target_name(target)
+        "Pods-#{target.display_name}"
       end
     end
   end

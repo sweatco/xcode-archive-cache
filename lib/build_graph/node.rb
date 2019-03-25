@@ -57,18 +57,29 @@ module XcodeArchiveCache
       # @return [String]
       #
       def product_file_name
-        product_file_name = nil
+        return nil unless build_settings
+
+        product_name = build_settings[XcodeArchiveCache::BuildSettings::FULL_PRODUCT_NAME_KEY]
+        return product_name if product_name
 
         product_name = native_target.product_reference.name
         if has_framework_product? && product_name
           product_file_name = product_name
         end
 
-        if product_file_name == nil
+        unless product_file_name
           product_file_name = File.basename(native_target.product_reference.real_path)
         end
 
         product_file_name
+      end
+
+      # @return [String]
+      #
+      def dsym_file_name
+        return nil unless build_settings
+
+        build_settings[XcodeArchiveCache::BuildSettings::DWARF_DSYM_FILE_NAME_KEY]
       end
 
       # @return [Array<Node>]

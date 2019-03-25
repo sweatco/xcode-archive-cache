@@ -79,7 +79,7 @@ module XcodeArchiveCache
 
       xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.build_settings.configuration, dependency_target.platform_name)
       graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@projects, xcodebuild_executor)
-      graph = graph_builder.build_graph(dependency_target)
+      graph = graph_builder.build_graph(target, dependency_target)
 
       evaluate_for_rebuild(graph)
       extract_cached_artifacts(graph)

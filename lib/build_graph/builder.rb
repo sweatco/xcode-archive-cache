@@ -12,15 +12,17 @@ module XcodeArchiveCache
         @sha_calculator = NodeShaCalculator.new
       end
 
-      # @param [Xcodeproj::Project::Object::PBXNativeTarget] root_target
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependency_target
       #
       # @return [Graph]
       #
-      def build_graph(root_target)
-        native_target_finder.set_platform_name_filter(root_target.platform_name)
+      def build_graph(dependent_target, dependency_target)
+        native_target_finder.set_platform_name_filter(dependency_target.platform_name)
 
-        graph = Graph.new(root_target.project)
-        add_to_graph(root_target, graph, true)
+        build_settings = load_setting_for_target(dependent_target)
+        graph = Graph.new(dependency_target.project, build_settings)
+
+        add_to_graph(dependency_target, graph, true)
         load_settings(graph)
         calculate_shas(graph)
 
@@ -125,12 +127,7 @@ module XcodeArchiveCache
         counter = 1
 
         graph.nodes.each do |node|
-          info("loading settings for #{node.name}")
-
-          project_path = node.native_target.project.path
-          build_settings_loader.load_settings(project_path)
-
-          node_settings = build_settings_loader.get_settings(project_path, node.name)
+          node_settings = load_setting_for_target(node.native_target)
           unless node_settings
             raise StandardError.new, "No build settings loaded for #{node.name}"
           end
@@ -140,6 +137,17 @@ module XcodeArchiveCache
           debug("settings loaded for #{node.name} (#{counter} / #{graph.nodes.length})")
           counter += 1
         end
+      end
+
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      #
+      def load_setting_for_target(target)
+        info("loading settings for #{target.display_name}")
+
+        project_path = target.project.path
+        build_settings_loader.load_settings(project_path)
+        build_settings_loader.get_settings(project_path, target.display_name)
       end
     end
   end

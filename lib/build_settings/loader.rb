@@ -1,5 +1,9 @@
 module XcodeArchiveCache
   module BuildSettings
+
+    FULL_PRODUCT_NAME_KEY = "FULL_PRODUCT_NAME".freeze
+    DWARF_DSYM_FILE_NAME_KEY = "DWARF_DSYM_FILE_NAME".freeze
+
     class Container
 
       # @return [Hash{String => String}]

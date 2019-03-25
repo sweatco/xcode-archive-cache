@@ -3,7 +3,7 @@ module XcodeArchiveCache
     class StringInterpolator
 
       def initialize
-        @setting_entry_regex = /\$\([A-Z0-9_]+\)/
+        @setting_entry_regex = /\$[({][A-Z0-9_]+[)}]/
         @setting_name_regex = /(?<name>[A-Z0-9_]+)/
       end
 
@@ -24,7 +24,8 @@ module XcodeArchiveCache
           value = build_settings[name]
           next unless value
 
-          result = result.gsub(name_to_entry(name), value)
+          replacement_regex = Regexp.new("\\$[({]#{name}[)}]")
+          result = result.gsub(replacement_regex, value)
         end
 
         result
@@ -39,14 +40,6 @@ module XcodeArchiveCache
       # @return [Regexp]
       #
       attr_accessor :setting_name_regex
-
-      # @param [String] name
-      #
-      # @return [String]
-      #
-      def name_to_entry(name)
-        "$(#{name})"
-      end
     end
   end
 end
