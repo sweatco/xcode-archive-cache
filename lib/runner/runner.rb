@@ -29,8 +29,16 @@ module XcodeArchiveCache
     end
 
     def run
+      perform_cleanup
+      
       config.targets.each do |target_config|
         handle_target(target_config)
+      end
+    end
+
+    def perform_cleanup
+      if File.exist?(config.build_settings.derived_data_path)
+        FileUtils.rm_rf(config.build_settings.derived_data_path)
       end
     end
 
