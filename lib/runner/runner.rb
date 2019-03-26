@@ -30,7 +30,7 @@ module XcodeArchiveCache
 
     def run
       perform_cleanup
-      
+
       config.targets.each do |target_config|
         handle_target(target_config)
       end
