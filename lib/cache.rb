@@ -36,6 +36,7 @@ require 'build_settings/filter'
 require 'build_settings/loader'
 require 'build_settings/extractor'
 require 'build_settings/string_interpolator'
+require 'build_settings/parser'
 
 require 'injection/injector'
 require 'injection/pods_script_fixer'

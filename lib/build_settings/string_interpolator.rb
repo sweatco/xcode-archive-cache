@@ -3,8 +3,7 @@ module XcodeArchiveCache
     class StringInterpolator
 
       def initialize
-        @setting_entry_regex = /\$[({][A-Z0-9_]+[)}]/
-        @setting_name_regex = /(?<name>[A-Z0-9_]+)/
+        @parser = Parser.new
       end
 
       # @param [String] string
@@ -13,18 +12,14 @@ module XcodeArchiveCache
       # @return [String]
       #
       def interpolate(string, build_settings)
-        names = string.scan(setting_entry_regex)
-                    .map {|entry| entry.scan(setting_name_regex).first}
-                    .flatten
-                    .compact
-                    .uniq
+        names = parser.find_all_names(string)
         result = string
 
         names.each do |name|
           value = build_settings[name]
           next unless value
 
-          replacement_regex = Regexp.new("\\$[({]#{name}[)}]")
+          replacement_regex = parser.create_entry_regex(name)
           result = result.gsub(replacement_regex, value)
         end
 
@@ -33,13 +28,9 @@ module XcodeArchiveCache
 
       private
 
-      # @return [Regexp]
+      # @return [Parser]
       #
-      attr_accessor :setting_entry_regex
-
-      # @return [Regexp]
-      #
-      attr_accessor :setting_name_regex
+      attr_accessor :parser
     end
   end
 end

@@ -3,8 +3,7 @@ module XcodeArchiveCache
     class Extractor
 
       def initialize
-        @setting_name_regex = /^(?<name>[A-Z0-9_]+)\s=/
-        @setting_value_regex = /^[A-Z0-9_]+\s=\s(?<value>.+)$/
+        @parser = Parser.new
         @filter = Filter.new
       end
 
@@ -32,20 +31,13 @@ module XcodeArchiveCache
 
       private
 
-      # @return [XcodeArchiveCache::BuildSettings::Filter]
+      # @return [Filter]
       #
       attr_reader :filter
 
-      # @return [Regexp]
+      # @return [Parser]
       #
-      attr_reader :setting_name_regex
-
-      # @return [Regexp]
-      #
-      attr_reader :setting_value_regex
-
-      SETTING_NAME_GROUP = "name".freeze
-      SETTING_VALUE_GROUP = "value".freeze
+      attr_reader :parser
 
       # @param [String] settings
       #
@@ -61,16 +53,10 @@ module XcodeArchiveCache
         result = Hash.new
 
         lines.each do |line|
-          match = setting_name_regex.match(line)
-          next unless match
-
-          name = match[SETTING_NAME_GROUP]
+          name = parser.parse_name(line)
           next unless name
 
-          match = setting_value_regex.match(line)
-          next unless match
-
-          value = match[SETTING_VALUE_GROUP]
+          value = parser.parse_value(line)
           next unless value
 
           result[name] = value
