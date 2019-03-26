@@ -1,4 +1,5 @@
 require 'build_settings/filter'
+require 'build_settings/parser'
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
