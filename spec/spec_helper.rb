@@ -1,5 +1,7 @@
+require 'build_settings/loader'
 require 'build_settings/filter'
 require 'build_settings/parser'
+require 'build_settings/string_interpolator'
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
