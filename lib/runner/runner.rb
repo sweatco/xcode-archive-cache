@@ -53,8 +53,7 @@ module XcodeArchiveCache
     def handle_target(target_config)
       target = find_target(target_config.name)
       unless target
-        error("target not found for #{target_config.name}")
-        exit 1
+        raise Informative, "Target not found for #{target_config.name}"
       end
 
       target_config.dependencies.each do |dependency_name|
@@ -71,6 +70,8 @@ module XcodeArchiveCache
                      .first
         return target if target
       end
+
+      nil
     end
 
     # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
@@ -81,8 +82,7 @@ module XcodeArchiveCache
 
       dependency_target = find_target(dependency_name)
       unless dependency_target
-        error("target not found for #{dependency_name} of #{target.display_name}")
-        exit 1
+        raise Informative, "Target not found for #{dependency_name} of #{target.display_name}"
       end
 
       xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.build_settings.configuration, dependency_target.platform_name)

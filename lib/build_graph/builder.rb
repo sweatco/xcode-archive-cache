@@ -67,7 +67,7 @@ module XcodeArchiveCache
 
         if target_stack.include?(display_name)
           target_stack.push(display_name)
-          raise StandardError.new, "Circular dependency detected: #{target_stack.join(" -> ")}"
+          raise Informative, "Circular dependency detected: #{target_stack.join(" -> ")}"
         end
 
         node = graph.node_by_name(display_name)
@@ -129,7 +129,7 @@ module XcodeArchiveCache
         graph.nodes.each do |node|
           node_settings = load_setting_for_target(node.native_target)
           unless node_settings
-            raise StandardError.new, "No build settings loaded for #{node.name}"
+            raise Informative, "No build settings loaded for #{node.name}"
           end
 
           node.build_settings = node_settings

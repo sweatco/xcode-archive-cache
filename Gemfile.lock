@@ -34,6 +34,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  claide (~> 1.0)
   rspec (~> 3.7.0)
   rubyzip (~> 1.2.2)
   xcodeproj (~> 1.7.0)

@@ -1,7 +1,3 @@
-module XcodeArchiveCache
-  ;
-end
-
 require 'zip'
 require 'pathname'
 require 'fileutils'
@@ -11,8 +7,12 @@ require 'find'
 require 'digest'
 require 'xcodeproj'
 require 'open3'
+require 'claide'
 
 require 'logs/logs'
+
+require 'command/command'
+require 'command/inject'
 
 require 'config/dsl'
 require 'config/config'
@@ -51,7 +51,8 @@ require 'shell/executor'
 
 require 'xcodebuild/executor'
 
-config = XcodeArchiveCache::Config.from_file("Cachefile").current_configuration
-
-runner = XcodeArchiveCache::Runner.new(config)
-runner.run
+module XcodeArchiveCache
+  class Informative < StandardError
+    include CLAide::InformativeError
+  end
+end

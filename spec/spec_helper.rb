@@ -1,7 +1,8 @@
-require 'build_settings/loader'
-require 'build_settings/filter'
-require 'build_settings/parser'
-require 'build_settings/string_interpolator'
+require 'pathname'
+ROOT = Pathname.new(File.expand_path('../../', __FILE__))
+$LOAD_PATH.unshift((ROOT + 'lib').to_s)
+
+require 'xcode-archive-cache'
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|

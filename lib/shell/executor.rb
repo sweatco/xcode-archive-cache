@@ -12,7 +12,7 @@ module XcodeArchiveCache
         output, status = Open3.capture2e(actual_command)
 
         if status.exitstatus != 0
-          raise StandardError, "#{command}\nexecution failed\n#{output}"
+          raise Informative, "#{command}\nexecution failed\n#{output}"
         end
 
         output

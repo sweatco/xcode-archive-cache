@@ -121,15 +121,14 @@ module XcodeArchiveCache
         begin
           eval(contents, nil, path)
         rescue Exception => e
-          puts "invalid #{File.basename(path)} file: #{e.message}"
-          exit 1
+          raise Informative, "Invalid #{File.basename(path)} file: #{e.message}"
         end
       end
 
       config
     end
 
-    # @return [Workspace]
+    # @return [Entry]
     #
     attr_reader :current_configuration
 

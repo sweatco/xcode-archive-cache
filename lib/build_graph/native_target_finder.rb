@@ -42,7 +42,7 @@ module XcodeArchiveCache
           # products of sibling project targets are added as PBXFileReferences
           targets = find_with_product_path(file.file_ref.path)
           if targets.length > 1
-            raise StandardError.new, "found more than one target with product #{File.basename(file.file_ref.path)} in:\n#{targets.map(&:project)}"
+            raise Informative, "Found more than one target with product #{File.basename(file.file_ref.path)} in:\n#{targets.map(&:project)}"
           end
 
           targets.first
