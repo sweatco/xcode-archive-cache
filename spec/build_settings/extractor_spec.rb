@@ -1,7 +1,7 @@
 RSpec.describe XcodeArchiveCache::BuildSettings::Extractor, "#extract_build_settings" do
   before(:each) do
     @extractor = XcodeArchiveCache::BuildSettings::Extractor.new
-    @input =     input = "Build settings for action archive target first\n" \
+    @input = "Build settings for action archive target first\n" \
     "  TARGETNAME = first\n" \
     "  SETTING = setting value\n" \
     "  ANOTHER_SETTING = another setting value\n" \
