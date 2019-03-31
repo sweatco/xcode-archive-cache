@@ -18,7 +18,7 @@ module XcodeArchiveCache
       private
 
       # TODO: extend
-      SETTINGS_TO_KEEP = %w(ACTION ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES)
+      SETTINGS_TO_KEEP = %w(ACTION ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES ARCH TARGETNAME)
     end
   end
 end

@@ -25,6 +25,10 @@ module XcodeArchiveCache
       def [](name)
         all[name]
       end
+
+      def ==(other)
+        other && other.all == all && other.filtered == filtered
+      end
     end
 
     class Loader
