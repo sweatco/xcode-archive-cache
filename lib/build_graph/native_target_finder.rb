@@ -51,7 +51,7 @@ module XcodeArchiveCache
 
       private
 
-      # @return [Array<Xcodeproj::Projec::Object::PBXNativeTarget>]
+      # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]
       #
       attr_accessor :all_targets
 
