@@ -85,13 +85,13 @@ module XcodeArchiveCache
         raise Informative, "Target not found for #{dependency_name} of #{target.display_name}"
       end
 
-      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.build_settings.configuration, dependency_target.platform_name)
+      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.build_settings.configuration, dependency_target.platform_name, config.destination, config.action)
       graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@projects, xcodebuild_executor)
       graph = graph_builder.build_graph(target, dependency_target)
 
       evaluate_for_rebuild(graph)
       extract_cached_artifacts(graph)
-      rebuild_if_needed(dependency_target, graph)
+      rebuild_if_needed(xcodebuild_executor, dependency_target, graph)
       @injector.perform_outgoing_injection(graph, target)
     end
 
@@ -117,12 +117,12 @@ module XcodeArchiveCache
     # @param [Xcodeproj::Project::Object::PBXNativeTarget] root_target
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
-    def rebuild_if_needed(root_target, graph)
-      rebuild_performer = XcodeArchiveCache::Build::Performer.new(config.build_settings.derived_data_path)
+    def rebuild_if_needed(xcodebuild_executor, root_target, graph)
+      rebuild_performer = XcodeArchiveCache::Build::Performer.new(xcodebuild_executor, config.build_settings.derived_data_path)
       return unless rebuild_performer.should_rebuild?(graph)
 
       @injector.perform_internal_injection(graph)
-      rebuild_performer.rebuild_missing(config.build_settings.configuration, root_target, graph)
+      rebuild_performer.rebuild_missing(root_target, graph)
 
       graph.nodes.each do |node|
         next unless node.rebuild

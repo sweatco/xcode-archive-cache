@@ -5,9 +5,11 @@ module XcodeArchiveCache
       # @param [String] configuration
       # @param [String] platform
       #
-      def initialize(configuration, platform)
+      def initialize(configuration, platform, destination, action)
         @configuration = configuration
         @platform = platform
+        @destination = destination
+        @action = action
         @shell_executor = XcodeArchiveCache::Shell::Executor.new
       end
 
@@ -19,7 +21,7 @@ module XcodeArchiveCache
                  destination_flag,
                  all_targets_flag,
                  show_build_settings_flag,
-                 archive_command]
+                 action]
         command = compile_command(flags)
         shell_executor.execute_for_output(command)
       end
@@ -34,7 +36,7 @@ module XcodeArchiveCache
                  destination_flag,
                  scheme_flag(scheme),
                  derived_data_path_flag(derived_data_path),
-                 archive_command]
+                 action]
         command = "#{compile_command(flags)} | xcpretty"
         shell_executor.execute(command, true)
       end
@@ -47,7 +49,15 @@ module XcodeArchiveCache
 
       # @return [String]
       #
-      attr_accessor :platform
+      attr_reader :platform
+
+      # @return [String]
+      #
+      attr_reader :destination
+
+      # @return [String]
+      #
+      attr_reader :action
 
       # @return [XcodeArchiveCache::Shell::Executor]
       #
@@ -78,7 +88,8 @@ module XcodeArchiveCache
       # @return [String]
       #
       def destination_flag
-        "-destination 'generic/platform=#{platform}'"
+        destination_specifier = destination == "generic" ? "generic/platform=#{platform}" : destination
+        "-destination '#{destination_specifier}'"
       end
 
       # @return [String]
@@ -107,12 +118,6 @@ module XcodeArchiveCache
       #
       def show_build_settings_flag
         "-showBuildSettings"
-      end
-
-      # @return [String]
-      #
-      def archive_command
-        "archive"
       end
     end
   end

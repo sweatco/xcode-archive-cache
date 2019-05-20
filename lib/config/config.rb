@@ -21,6 +21,14 @@ module XcodeArchiveCache
       #
       attr_reader :storage
 
+      # @return [String]
+      #
+      attr_accessor :destination
+
+      # @return [String]
+      #
+      attr_accessor :action
+
       def initialize(name)
         @name = name
         @build_settings = BuildSettings.new
@@ -43,6 +51,8 @@ module XcodeArchiveCache
 
       private
 
+      # @return [String]
+      #
       attr_reader :file_extname
     end
 
