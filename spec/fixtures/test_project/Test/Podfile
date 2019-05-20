@@ -9,5 +9,5 @@ target 'Test' do
     platform :ios, '10.0'
 
     pod 'MRProgress', '~> 0.8'
-    pod 'SDCAlertView', '~> 2.5'
+    pod 'SDCAlertView', '= 2.5.3'
 end

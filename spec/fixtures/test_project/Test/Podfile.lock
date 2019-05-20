@@ -28,14 +28,14 @@ PODS:
   - MRProgress/Stopable (0.8.3):
     - MRProgress/Helper
   - RBBAnimation (0.4.0)
-  - SDCAlertView (2.5.4):
+  - SDCAlertView (2.5.3):
     - RBBAnimation (~> 0.3)
     - SDCAutoLayout (~> 2.0)
   - SDCAutoLayout (2.0.3)
 
 DEPENDENCIES:
   - MRProgress (~> 0.8)
-  - SDCAlertView (~> 2.5)
+  - SDCAlertView (= 2.5.3)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -47,9 +47,9 @@ SPEC REPOS:
 SPEC CHECKSUMS:
   MRProgress: 16de7cc9f347e8846797a770db102a323fe7ef09
   RBBAnimation: 4b2d66f6d993febce63cd564da934985313b9c59
-  SDCAlertView: 2e2b0ecc5f1ec367e45d83efa2e512688ca7fa55
+  SDCAlertView: 7554e4e7ce1adbefbcc7374e7bae237dad32a8d8
   SDCAutoLayout: e6885bb39ab8e2ec2ff84d158f38035f025f7420
 
-PODFILE CHECKSUM: 61aa3d9b4082620347d84260d5ce2bc5dd74261b
+PODFILE CHECKSUM: 38ecb60a61fa21dc8f9c719c7980f8bda0b69d5e
 
 COCOAPODS: 1.5.3
