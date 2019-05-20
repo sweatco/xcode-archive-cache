@@ -18,7 +18,6 @@
 ## Specific to RubyMotion:
 .dat*
 .repl_history
-build/
 *.bridgesupport
 build-iPhoneOS/
 build-iPhoneSimulator/
@@ -50,3 +49,7 @@ build-iPhoneSimulator/
 
 # unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
 .rvmrc
+
+spec/fixtures/test_project/Test/Pods
+**/xcuserdata
+
