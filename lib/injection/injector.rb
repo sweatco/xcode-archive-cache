@@ -70,6 +70,8 @@ module XcodeArchiveCache
       def add_as_prebuilt_to_dependents(prebuilt_node)
         dependent_nodes = prebuilt_node.dependent + nodes_to_propagate_to(prebuilt_node)
         dependent_nodes.each do |dependent_node|
+          next if prebuilt_node.rebuild
+
           add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, true)
         end
       end
@@ -89,8 +91,6 @@ module XcodeArchiveCache
       # @param [Boolean] always_link
       #
       def add_as_prebuilt_dependency(prebuilt_node, dependent_target, always_link = false)
-        return if prebuilt_node.rebuild
-
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
         if prebuilt_node.has_framework_product?
