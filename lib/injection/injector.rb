@@ -21,10 +21,7 @@ module XcodeArchiveCache
       #
       def perform_internal_injection(graph)
         graph.nodes.each {|node| add_as_prebuilt_to_dependents(node)}
-
-        projects = graph.nodes.map(&:native_target).map(&:project).uniq
-        debug("updating #{projects.length} projects")
-        projects.each {|project| project.save}
+        save_graph_projects(graph)
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
@@ -44,10 +41,11 @@ module XcodeArchiveCache
           pods_fixer.fix_embed_frameworks_script(target, graph.dependent_build_settings, storage.container_dir_path)
         else
           framework_nodes = graph.nodes.select {|node| node.has_framework_product?}
-          framework_file_paths = framework_nodes.map {|node| File.join(storage.get_storage_path(node), node.product_file_name) }
+          framework_file_paths = framework_nodes.map {|node| File.join(storage.get_storage_path(node), node.product_file_name)}
           framework_embedder.embed(framework_file_paths, target)
         end
 
+        save_graph_projects(graph)
         target.project.save
       end
 
@@ -124,6 +122,7 @@ module XcodeArchiveCache
         headers_mover.delete_headers(prebuilt_node)
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
+        remove_native_target_from_project(prebuilt_node)
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
@@ -148,6 +147,7 @@ module XcodeArchiveCache
         end
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
+        remove_native_target_from_project(prebuilt_node)
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
@@ -165,6 +165,25 @@ module XcodeArchiveCache
       #
       def get_pods_target_name(target)
         "Pods-#{target.display_name}"
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      # since 10.2 Xcode looks for implicit dependencies
+      # in -l and -framework linker flags, so we need to delete
+      # dependency target to make sure Xcode has no way to build it
+      # as implicit dependency
+      #
+      def remove_native_target_from_project(node)
+        node.native_target.project.targets.delete(node.native_target)
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Graph] graph
+      #
+      def save_graph_projects(graph)
+        projects = graph.nodes.map(&:native_target).map(&:project).uniq
+        debug("updating #{projects.length} projects")
+        projects.each {|project| project.save}
       end
     end
   end
