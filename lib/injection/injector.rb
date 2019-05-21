@@ -14,6 +14,7 @@ module XcodeArchiveCache
         @dependency_remover = DependencyRemover.new
         @build_flags_changer = BuildFlagsChanger.new
         @pods_fixer = PodsScriptFixer.new
+        @framework_embedder = FrameworkEmbedder.new
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
@@ -32,8 +33,19 @@ module XcodeArchiveCache
       def perform_outgoing_injection(graph, target)
         graph.nodes.each {|node| add_as_prebuilt_dependency(node, target, false)}
 
+        # pretty dummy but should work in most cases;
+        # here we assume that if graph has a pods target
+        # then all graph nodes are built as pods and therefore
+        # are covered by "Embed Pods Frameworks" script
+        #
+        # TODO: we need to embed all frameworks that were built outside of pods subgraph
+        #
         if graph.node_by_name(get_pods_target_name(target))
           pods_fixer.fix_embed_frameworks_script(target, graph.dependent_build_settings, storage.container_dir_path)
+        else
+          framework_nodes = graph.nodes.select {|node| node.has_framework_product?}
+          framework_file_paths = framework_nodes.map {|node| File.join(storage.get_storage_path(node), node.product_file_name) }
+          framework_embedder.embed(framework_file_paths, target)
         end
 
         target.project.save
@@ -64,6 +76,10 @@ module XcodeArchiveCache
       # @return [PodsScriptFixer]
       #
       attr_reader :pods_fixer
+
+      # @return [FrameworkEmbedder]
+      #
+      attr_reader :framework_embedder
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       #

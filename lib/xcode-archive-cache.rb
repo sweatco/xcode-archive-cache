@@ -44,6 +44,7 @@ require 'injection/build_flags_changer'
 require 'injection/dependency_remover'
 require 'injection/headers_mover'
 require 'injection/storage'
+require 'injection/framework_embedder'
 
 require 'runner/runner'
 
