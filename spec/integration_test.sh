@@ -98,6 +98,12 @@ update_single_pod() {
   check_for_positive_result "Update single pod"
 }
 
+update_framework_dependency_string_and_test() {
+  REPLACE_EXPRESSION="s+I'm a framework dependency+XcodeArchiveCache updated me+g"
+  sed -i.bak "$REPLACE_EXPRESSION" StaticDependency/Libraries/LibraryWithFrameworkDependency/FrameworkDependency/FrameworkDependency/FrameworkThing.m
+  sed -i.bak "$REPLACE_EXPRESSION" TestUITests/TestUITests.swift
+}
+
 cd $TEST_PROJECT_LOCATION
 
 ALL_FRAMEWORKS="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework"
@@ -110,3 +116,10 @@ clean_but_leave_build_cache && update_single_pod
 
 FRAMEWORKS_EXPECTED_TO_BE_REBUILT="SDCAlertView.framework|Pods_Test.framework"
 perform_test $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $ALL_FRAMEWORKS "" $ALL_LIBS
+
+# update our own dependency code, expecting changes to propagate to the app
+#
+clean_but_leave_build_cache && update_framework_dependency_string_and_test
+
+FRAMEWORKS_EXPECTED_TO_BE_REBUILT="FrameworkDependency.framework"
+perform_test $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $ALL_FRAMEWORKS $ALL_LIBS $ALL_LIBS
