@@ -30,7 +30,7 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
       def perform_outgoing_injection(graph, target)
-        graph.nodes.each {|node| add_as_prebuilt_dependency(node, target)}
+        graph.nodes.each {|node| add_as_prebuilt_dependency(node, target, false)}
 
         if graph.node_by_name(get_pods_target_name(target))
           pods_fixer.fix_embed_frameworks_script(target, graph.dependent_build_settings, storage.container_dir_path)
@@ -68,35 +68,24 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       #
       def add_as_prebuilt_to_dependents(prebuilt_node)
-        dependent_nodes = prebuilt_node.dependent + nodes_to_propagate_to(prebuilt_node)
-        dependent_nodes.each do |dependent_node|
+        prebuilt_node.dependent.each do |dependent_node|
           next if prebuilt_node.rebuild
 
           add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, true)
         end
       end
 
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
-      def nodes_to_propagate_to(node)
-        return [] unless node.has_static_library_product?
-
-        # propagate static library to all dependent nodes
-        # with targets from the same project
-        node.all_dependent_nodes.select {|dependent_node| node.native_target.project == dependent_node.native_target.project}
-      end
-
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
-      # @param [Boolean] always_link
+      # @param [Boolean] should_link
       #
-      def add_as_prebuilt_dependency(prebuilt_node, dependent_target, always_link = false)
+      def add_as_prebuilt_dependency(prebuilt_node, dependent_target, should_link)
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
         if prebuilt_node.has_framework_product?
           add_as_prebuilt_framework(prebuilt_node, dependent_target)
         elsif prebuilt_node.has_static_library_product?
-          add_as_prebuilt_static_lib(prebuilt_node, dependent_target, always_link)
+          add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
         else
           raise ArgumentError.new, "#{prebuilt_node.name} has unsupported product type: #{prebuilt_node.native_target.product_type}"
         end
@@ -123,12 +112,12 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
-      # @param [Boolean] always_link
+      # @param [Boolean] should_link
       #
-      def add_as_prebuilt_static_lib(prebuilt_node, dependent_target, always_link)
+      def add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
         build_configuration = find_build_configuration(dependent_target)
 
-        if always_link || prebuilt_node.is_root
+        if should_link || prebuilt_node.is_root
           artifact_location = storage.get_storage_path(prebuilt_node)
           build_flags_changer.add_library_search_path(build_configuration, artifact_location)
           build_flags_changer.add_library_linker_flag(build_configuration, prebuilt_node)
