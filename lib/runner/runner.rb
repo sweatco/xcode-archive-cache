@@ -12,7 +12,8 @@ module XcodeArchiveCache
       workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
       workspace_dir = File.expand_path("..", workspace_path)
 
-      @projects = workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
+      projects = workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
+      @native_target_finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new(projects)
 
       storage_path = File.absolute_path(config.storage.path)
       @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(storage_path)
@@ -51,7 +52,7 @@ module XcodeArchiveCache
     # @param [XcodeArchiveCache::Config::Target] target_config
     #
     def handle_target(target_config)
-      target = find_target(target_config.name)
+      target = @native_target_finder.find_for_product_name(target_config.name)
       unless target
         raise Informative, "Target not found for #{target_config.name}"
       end
@@ -61,32 +62,19 @@ module XcodeArchiveCache
       end
     end
 
-    # @param [String] product_name
-    #
-    def find_target(product_name)
-      @projects.each do |project|
-        target = project.native_targets
-                     .select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
-                     .first
-        return target if target
-      end
-
-      nil
-    end
-
     # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
     # @param [String] dependency_name
     #
     def handle_dependency(target, dependency_name)
       info("checking #{dependency_name}")
 
-      dependency_target = find_target(dependency_name)
+      dependency_target = @native_target_finder.find_for_product_name(dependency_name)
       unless dependency_target
         raise Informative, "Target not found for #{dependency_name} of #{target.display_name}"
       end
 
       xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.build_settings.configuration, dependency_target.platform_name, config.destination, config.action)
-      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@projects, xcodebuild_executor)
+      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
       graph = graph_builder.build_graph(target, dependency_target)
 
       evaluate_for_rebuild(graph)

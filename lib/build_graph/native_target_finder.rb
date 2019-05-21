@@ -49,6 +49,13 @@ module XcodeArchiveCache
         end
       end
 
+      # @param [String] product_name
+      #
+      def find_for_product_name(product_name)
+        all_targets.select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
+                    .first
+      end
+
       private
 
       # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]

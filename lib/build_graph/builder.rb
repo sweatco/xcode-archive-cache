@@ -6,9 +6,9 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::Xcodebuild::Executor] xcodebuild_executor
       #
-      def initialize(projects, xcodebuild_executor)
+      def initialize(native_target_finder, xcodebuild_executor)
         @build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(xcodebuild_executor)
-        @native_target_finder = NativeTargetFinder.new(projects)
+        @native_target_finder = native_target_finder
         @sha_calculator = NodeShaCalculator.new
       end
 
