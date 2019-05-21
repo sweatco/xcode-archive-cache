@@ -20,6 +20,7 @@ class TestUITests: XCTestCase {
     }
 
     func testAppRunning() {
+        XCTAssertEqual(XCUIApplication().staticTexts["StaticLibWithFrameworkLabel"].label, "I'm a static library with a framework dependency AND I'm a framework dependency")
         XCUIApplication()/*@START_MENU_TOKEN@*/.buttons["TapMeButton"]/*[[".buttons[\"Tap me\"]",".buttons[\"TapMeButton\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/.tap()
     }
 }
