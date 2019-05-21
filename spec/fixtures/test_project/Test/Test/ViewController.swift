@@ -10,8 +10,12 @@ import UIKit
 import SDCAlertView
 
 class ViewController: UIViewController {
+    @IBOutlet weak var frameworkLabel: UILabel!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        frameworkLabel.text = StaticDependency().libraryWithFrameworkDependencyDescription()
     }
     
     @IBAction func tapMeTapped(_ sender: Any) {
