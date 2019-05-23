@@ -4,13 +4,13 @@ module XcodeArchiveCache
     include XcodeArchiveCache::Logs
 
     self.abstract_command = true
-    self.command = "cache"
+    self.command = "xcode-archive-cache"
     self.description = "XcodeArchiveCache, cache for Xcode archive action"
 
     def self.options
       [
           ["--log-level=[nothing|info|verbose]", "Level of log verbosity, defaults to info"]
-      ].concat(super.reject { |(name, _)| name != '--help' })
+      ].concat(super.reject { |(name, _)| name != "--help" })
     end
 
     def self.run(argv)

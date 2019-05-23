@@ -5,7 +5,7 @@ module XcodeArchiveCache
       # @param [String] name
       #
       def workspace(name)
-        self.current_configuration = Workspace.new(name)
+        self.entry = Workspace.new(name)
 
         yield
       end
@@ -13,7 +13,7 @@ module XcodeArchiveCache
       # @param [String] name
       #
       def project(name)
-        self.current_configuration = Project.new(name)
+        self.entry = Project.new(name)
 
         yield
       end
@@ -21,27 +21,40 @@ module XcodeArchiveCache
       # @param [String] name
       #
       def configuration(name)
-        current_configuration.build_settings.configuration = name
+        entry.configurations.push(Configuration.new(name))
+
+        yield
+      end
+
+      # @param [String] name
+      #
+      def build_configuration(name)
+        current_configuration.build_configuration = name
+      end
+
+      # @param [String] name
+      #
+      def action(name)
+        current_configuration.action = name
+      end
+
+      # @param [String] args
+      #
+      def xcodebuild_args(args)
+        current_configuration.xcodebuild_args = args
       end
 
       # @param [String] path
       #
       def derived_data_path(path)
-        current_configuration.build_settings.derived_data_path = path
-      end
-
-      # @param [String] path
-      #
-      def local_storage(path)
-        current_configuration.storage.type = :local
-        current_configuration.storage.path = path
+        entry.settings.derived_data_path = path
       end
 
       # @return [String]
       #
       def target(name)
         target = Target.new(name)
-        current_configuration.targets.push(target)
+        entry.targets.push(target)
 
         yield
       end

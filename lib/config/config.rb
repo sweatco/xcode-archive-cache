@@ -9,29 +9,31 @@ module XcodeArchiveCache
       #
       attr_reader :name
 
+      # @return [Array<Configuration>]
+      #
+      attr_reader :configurations
+
+      # @return [String]
+      #
+      attr_accessor :active_configuration_name
+
       # @return [Array<Target>]
       #
       attr_reader :targets
 
-      # @return [BuildSettings]
+      # @return [Settings]
       #
-      attr_reader :build_settings
+      attr_reader :settings
 
       # @return [Storage]
       #
       attr_reader :storage
 
-      # @return [String]
-      #
-      attr_accessor :destination
-
-      # @return [String]
-      #
-      attr_accessor :action
-
       def initialize(name)
         @name = name
-        @build_settings = BuildSettings.new
+        @configurations = []
+        @active_configuration_name = nil
+        @settings = Settings.new
         @storage = Storage.new
         @targets = []
         @file_extname = ""
@@ -45,8 +47,19 @@ module XcodeArchiveCache
         name + file_extname
       end
 
+      # @return [Configuration]
+      #
+      def active_configuration
+        configuration = configurations.select{|config| config.name == active_configuration_name }.first
+        if configuration == nil
+          raise Informative, "Found no configuration with name \"#{active_configuration_name}\""
+        end
+
+        configuration
+      end
+
       def to_s
-        "path: #{file_path}\n#{build_settings}\nstorage: #{storage}\ntargets:\n\t#{targets.join("\n\t")}"
+        "path: #{file_path}\nactive configuration: #{active_configuration_name}\nconfigurations:\n\t#{configurations.join("\n\t")}\n#{settings}\nstorage: #{storage}\ntargets:\n\t#{targets.join("\n\t")}"
       end
 
       private
@@ -70,18 +83,46 @@ module XcodeArchiveCache
       end
     end
 
-    class BuildSettings
+    class Configuration
+      # @return [String]
+      #
+      attr_reader :name
 
       # @return [String]
       #
-      attr_accessor :configuration
+      attr_accessor :build_configuration
 
+      # @return [String]
+      #
+      attr_accessor :action
+
+      # @return [String]
+      #
+      attr_accessor :xcodebuild_args
+
+      # @param [String] name
+      #
+      def initialize(name)
+        @name = name
+        @action = "archive"
+      end
+
+      def to_s
+        "#{name}, build configuration: #{build_configuration}, action: #{action}, xcodebuild args: \"#{xcodebuild_args}\""
+      end
+    end
+
+    class Settings
       # @return [String]
       #
       attr_accessor :derived_data_path
 
+      # @return [String]
+      #
+      attr_accessor :destination
+
       def to_s
-        "configuration: #{configuration}, derived data path: #{derived_data_path}"
+        "destination: #{destination}, derived data path: #{derived_data_path}"
       end
     end
 
@@ -96,7 +137,7 @@ module XcodeArchiveCache
       attr_accessor :path
 
       def to_s
-        "type: #{type}, path: #{path}"
+        "#{type}, path: #{path}"
       end
     end
 
@@ -118,7 +159,7 @@ module XcodeArchiveCache
       end
 
       def to_s
-        "name: #{name}, dependencies: #{dependencies.join(", ")}"
+        "#{name}, dependencies: #{dependencies.join(", ")}"
       end
     end
 
@@ -140,10 +181,10 @@ module XcodeArchiveCache
 
     # @return [Entry]
     #
-    attr_reader :current_configuration
+    attr_reader :entry
 
     def initialize(&block)
-      @current_configuration = nil
+      @entry = nil
       @current_target = nil
 
       if block
@@ -153,12 +194,18 @@ module XcodeArchiveCache
 
     private
 
-    attr_writer :current_configuration
+    attr_writer :entry
+
+    # @return [Configuration]
+    #
+    def current_configuration
+      entry.configurations.last
+    end
 
     # @return [Target]
     #
     def current_target
-      current_configuration.targets.last
+      entry.targets.last
     end
   end
 end

@@ -1,7 +1,9 @@
 module XcodeArchiveCache
   module Xcodebuild
-    class Executor
+    ARCHIVE_ACTION = "archive"
+    GENERIC_DESTINATION = "generic"
 
+    class Executor
       # @param [String] configuration
       # @param [String] platform
       #
@@ -88,7 +90,10 @@ module XcodeArchiveCache
       # @return [String]
       #
       def destination_flag
-        destination_specifier = destination == "generic" ? "generic/platform=#{platform}" : destination
+        # archives can only be made with generic destination
+        #
+        inferred_destination = action == ARCHIVE_ACTION ? GENERIC_DESTINATION : destination
+        destination_specifier = inferred_destination == GENERIC_DESTINATION ? "generic/platform=#{platform}" : inferred_destination
         "-destination '#{destination_specifier}'"
       end
 

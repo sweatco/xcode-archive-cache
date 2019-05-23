@@ -43,7 +43,7 @@ perform_test() {
   pod install
   check_for_positive_result "Install pods"
 
-  xcode-archive-cache inject --destination="$TEST_DESTINATION" --action=build --log-level=verbose | tee $CACHE_LOG_FILE
+  xcode-archive-cache inject --destination="$TEST_DESTINATION" --configuration=Debug --storage=build_cache --log-level=verbose | tee $CACHE_LOG_FILE
   check_for_positive_result "Build and cache dependencies"
 
   # check what was rebuilt

@@ -21,12 +21,12 @@ module XcodeArchiveCache
 
       @artifact_extractor = XcodeArchiveCache::ArtifactCache::ArtifactExtractor.new(@cache_storage)
 
-      derived_data_path = File.absolute_path(config.build_settings.derived_data_path)
-      @product_extractor = XcodeArchiveCache::Build::ProductExtractor.new(config.build_settings.configuration, derived_data_path)
+      derived_data_path = File.absolute_path(config.settings.derived_data_path)
+      @product_extractor = XcodeArchiveCache::Build::ProductExtractor.new(config.active_configuration.build_configuration, derived_data_path)
 
       unpacked_artifacts_dir = File.absolute_path(File.join(derived_data_path, "cached"))
       @injection_storage = XcodeArchiveCache::Injection::Storage.new(unpacked_artifacts_dir)
-      @injector = XcodeArchiveCache::Injection::Injector.new(config.build_settings.configuration, @injection_storage)
+      @injector = XcodeArchiveCache::Injection::Injector.new(config.active_configuration.build_configuration, @injection_storage)
     end
 
     def run
@@ -38,8 +38,8 @@ module XcodeArchiveCache
     end
 
     def perform_cleanup
-      if File.exist?(config.build_settings.derived_data_path)
-        FileUtils.rm_rf(config.build_settings.derived_data_path)
+      if File.exist?(config.settings.derived_data_path)
+        FileUtils.rm_rf(config.settings.derived_data_path)
       end
     end
 
@@ -73,7 +73,10 @@ module XcodeArchiveCache
         raise Informative, "Target not found for #{dependency_name} of #{target.display_name}"
       end
 
-      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.build_settings.configuration, dependency_target.platform_name, config.destination, config.action)
+      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.active_configuration.build_configuration,
+                                                                        dependency_target.platform_name,
+                                                                        config.settings.destination,
+                                                                        config.active_configuration.action)
       graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
       graph = graph_builder.build_graph(target, dependency_target)
 
@@ -106,7 +109,7 @@ module XcodeArchiveCache
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
     def rebuild_if_needed(xcodebuild_executor, root_target, graph)
-      rebuild_performer = XcodeArchiveCache::Build::Performer.new(xcodebuild_executor, config.build_settings.derived_data_path)
+      rebuild_performer = XcodeArchiveCache::Build::Performer.new(xcodebuild_executor, config.settings.derived_data_path)
       return unless rebuild_performer.should_rebuild?(graph)
 
       @injector.perform_internal_injection(graph)
