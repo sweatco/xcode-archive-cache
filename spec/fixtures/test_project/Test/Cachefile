@@ -1,8 +1,10 @@
 workspace "Test" do
-  configuration "Debug"
-  derived_data_path "build"
+  configuration "Debug" do
+    build_configuration "Debug"
+    action "build"
+  end
 
-  local_storage "build_cache"
+  derived_data_path "build"
 
   target "Test" do
     cache "Pods_Test.framework"
