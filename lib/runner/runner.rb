@@ -76,7 +76,8 @@ module XcodeArchiveCache
       xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.active_configuration.build_configuration,
                                                                         dependency_target.platform_name,
                                                                         config.settings.destination,
-                                                                        config.active_configuration.action)
+                                                                        config.active_configuration.action,
+                                                                        config.active_configuration.xcodebuild_args)
       graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
       graph = graph_builder.build_graph(target, dependency_target)
 

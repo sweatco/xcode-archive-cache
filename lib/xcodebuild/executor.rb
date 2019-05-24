@@ -6,12 +6,16 @@ module XcodeArchiveCache
     class Executor
       # @param [String] configuration
       # @param [String] platform
+      # @param [String] destination
+      # @param [String] action
+      # @param [String] args
       #
-      def initialize(configuration, platform, destination, action)
+      def initialize(configuration, platform, destination, action, args)
         @configuration = configuration
         @platform = platform
         @destination = destination
         @action = action
+        @args = args
         @shell_executor = XcodeArchiveCache::Shell::Executor.new
       end
 
@@ -23,6 +27,7 @@ module XcodeArchiveCache
                  destination_flag,
                  all_targets_flag,
                  show_build_settings_flag,
+                 args,
                  action]
         command = compile_command(flags)
         shell_executor.execute_for_output(command)
@@ -38,6 +43,7 @@ module XcodeArchiveCache
                  destination_flag,
                  scheme_flag(scheme),
                  derived_data_path_flag(derived_data_path),
+                 args,
                  action]
         command = "#{compile_command(flags)} | xcpretty"
         shell_executor.execute(command, true)
@@ -60,6 +66,10 @@ module XcodeArchiveCache
       # @return [String]
       #
       attr_reader :action
+
+      # @return [String]
+      #
+      attr_reader :args
 
       # @return [XcodeArchiveCache::Shell::Executor]
       #

@@ -2,6 +2,7 @@ workspace "Test" do
   configuration "Debug" do
     build_configuration "Debug"
     action "build"
+    xcodebuild_args "DEBUG_MENU='1' -UseModernBuildSystem=NO"
   end
 
   derived_data_path "build"
