@@ -32,10 +32,12 @@ PODS:
     - RBBAnimation (~> 0.3)
     - SDCAutoLayout (~> 2.0)
   - SDCAutoLayout (2.0.3)
+  - SwiftLint (0.32.0)
 
 DEPENDENCIES:
   - MRProgress (~> 0.8)
   - SDCAlertView (= 2.5.3)
+  - SwiftLint (~> 0.27)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
@@ -43,13 +45,15 @@ SPEC REPOS:
     - RBBAnimation
     - SDCAlertView
     - SDCAutoLayout
+    - SwiftLint
 
 SPEC CHECKSUMS:
   MRProgress: 16de7cc9f347e8846797a770db102a323fe7ef09
   RBBAnimation: 4b2d66f6d993febce63cd564da934985313b9c59
   SDCAlertView: 7554e4e7ce1adbefbcc7374e7bae237dad32a8d8
   SDCAutoLayout: e6885bb39ab8e2ec2ff84d158f38035f025f7420
+  SwiftLint: 009a898ef2a1c851f45e1b59349bf6ff2ddc990d
 
-PODFILE CHECKSUM: 38ecb60a61fa21dc8f9c719c7980f8bda0b69d5e
+PODFILE CHECKSUM: a54303ef1a655bc8101cea2c88b12be0710e4b1f
 
-COCOAPODS: 1.5.3
+COCOAPODS: 1.6.2
