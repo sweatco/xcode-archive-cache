@@ -46,49 +46,52 @@ perform_test() {
   ../../../../bin/xcode-archive-cache inject --destination="$TEST_DESTINATION" --configuration=Debug --storage=build_cache --log-level=verbose | tee $CACHE_LOG_FILE
   check_for_positive_result "Build and cache dependencies"
 
-  # check what was rebuilt
-  #
+  xcodebuild -workspace Test.xcworkspace -scheme Test -destination "$TEST_DESTINATION" -derivedDataPath build test | xcpretty | tee $XCODEBUILD_LOG_FILE
+  check_for_positive_result "Test app"
+}
+
+expect_frameworks_to_be_rebuilt() {
   FRAMEWORKS=$(make_filename_list_enumerable "$1")
   for FRAMEWORK_NAME in $FRAMEWORKS; do
-    grep -q "Touching $FRAMEWORK_NAME" $CACHE_LOG_FILE
+    grep -q "Touching $FRAMEWORK_NAME" $2
     check_for_positive_result "Rebuild check for $FRAMEWORK_NAME"
   done
 
-  NUMBER_OF_REBUILT_FRAMEWORKS=$(grep "Touching" $CACHE_LOG_FILE | wc -l | xargs)
+  NUMBER_OF_REBUILT_FRAMEWORKS=$(grep "Touching" $2 | wc -l | xargs)
   NUMBER_OF_FRAMEWORKS_EXPECTED_TO_BE_REBUILT=$(echo "$FRAMEWORKS" | wc -w | xargs)
   if [ $NUMBER_OF_REBUILT_FRAMEWORKS != $NUMBER_OF_FRAMEWORKS_EXPECTED_TO_BE_REBUILT ]; then
     echo "Number of rebuilt frameworks is wrong"
     exit 1
   fi
+}
 
-  LIBS=$(make_filename_list_enumerable "$3")
+expect_frameworks_not_to_be_rebuilt() {
+  FRAMEWORKS=$(make_filename_list_enumerable "$1")
+  for FRAMEWORK_NAME in $FRAMEWORKS; do
+    grep -q "Touching $FRAMEWORK_NAME" $2
+    check_for_negative_result "No-extra-rebuild check for $FRAMEWORK_NAME"
+  done
+}
+
+expect_libs_to_be_rebuilt() {
+  LIBS=$(make_filename_list_enumerable "$1")
   for LIB_NAME in $LIBS; do
-    grep -q "Building library $LIB_NAME" $CACHE_LOG_FILE
+    grep -q "Building library $LIB_NAME" $2
     check_for_positive_result "Rebuild check for $LIB_NAME"
   done
 
-  NUMBER_OF_REBUILT_LIBS=$(grep "Building\slibrary" $CACHE_LOG_FILE | wc -l | xargs)
+  NUMBER_OF_REBUILT_LIBS=$(grep "Building\slibrary" $2 | wc -l | xargs)
   NUMBER_OF_LIBS_EXPECTED_TO_BE_REBUILT=$(echo "$LIBS" | wc -w | xargs)
   if [ $NUMBER_OF_REBUILT_LIBS != $NUMBER_OF_LIBS_EXPECTED_TO_BE_REBUILT ]; then
     echo "Number of rebuilt libs is wrong"
     exit 1
   fi
+}
 
-  xcodebuild -workspace Test.xcworkspace -scheme Test -destination "$TEST_DESTINATION" -derivedDataPath build test | xcpretty | tee $XCODEBUILD_LOG_FILE
-  check_for_positive_result "Test app"
-
-  # check that none of cached dependencies
-  # were rebuilt during app build
-  #
-  FRAMEWORKS=$(make_filename_list_enumerable "$2")
-  for FRAMEWORK_NAME in $FRAMEWORKS; do
-    grep -q "Touching $FRAMEWORK_NAME" $XCODEBUILD_LOG_FILE
-    check_for_negative_result "No-extra-rebuild check for $FRAMEWORK_NAME"
-  done
-
-  LIBS=$(make_filename_list_enumerable "$4")
+expect_libs_not_to_be_rebuilt() {
+  LIBS=$(make_filename_list_enumerable "$1")
   for LIB_NAME in $LIBS; do
-    grep -q "Building library $LIB_NAME" $XCODEBUILD_LOG_FILE
+    grep -q "Building library $LIB_NAME" $2
     check_for_negative_result "No-extra-rebuild check for $LIB_NAME"
   done
 }
@@ -108,18 +111,30 @@ cd $TEST_PROJECT_LOCATION
 
 ALL_FRAMEWORKS="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework"
 ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a"
-perform_full_clean && perform_test $ALL_FRAMEWORKS $ALL_FRAMEWORKS $ALL_LIBS $ALL_LIBS
+perform_full_clean && perform_test
+expect_frameworks_to_be_rebuilt $ALL_FRAMEWORKS $CACHE_LOG_FILE
+expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_libs_to_be_rebuilt $ALL_LIBS $CACHE_LOG_FILE
+expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
 # update single pod, expecting it to be rebuilt
 #
 clean_but_leave_build_cache && update_single_pod
 
 FRAMEWORKS_EXPECTED_TO_BE_REBUILT="SDCAlertView.framework|Pods_Test.framework"
-perform_test $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $ALL_FRAMEWORKS "" $ALL_LIBS
+perform_test
+expect_frameworks_to_be_rebuilt $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
+expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
+expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
 # update our own dependency code, expecting changes to propagate to the app
 #
 clean_but_leave_build_cache && update_framework_dependency_string_and_test
 
 FRAMEWORKS_EXPECTED_TO_BE_REBUILT="FrameworkDependency.framework"
-perform_test $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $ALL_FRAMEWORKS $ALL_LIBS $ALL_LIBS
+perform_test
+expect_frameworks_to_be_rebuilt $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
+expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_libs_to_be_rebuilt $ALL_LIBS $CACHE_LOG_FILE
+expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
