@@ -26,7 +26,8 @@ module XcodeArchiveCache
       #
       def find_for_dependency(dependency)
         # targets from embedded projects are proxied
-        dependency.target ? dependency.target : dependency.target_proxy.proxied_object
+        target = dependency.target ? dependency.target : dependency.target_proxy.proxied_object
+        target.is_a?(Xcodeproj::Project::Object::PBXNativeTarget) ? target : nil
       end
 
       # @param [Xcodeproj::Project::Object::PBXBuildFile] file
