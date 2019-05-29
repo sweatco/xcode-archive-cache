@@ -13,7 +13,7 @@ module XcodeArchiveCache
       def initialize(configuration, platform, destination, action, args)
         @configuration = configuration
         @platform = platform
-        @destination = destination
+        @destinations = destination.split("|")
         @action = action
         @args = args
         @shell_executor = XcodeArchiveCache::Shell::Executor.new
@@ -59,9 +59,9 @@ module XcodeArchiveCache
       #
       attr_reader :platform
 
-      # @return [String]
+      # @return [Array<String>]
       #
-      attr_reader :destination
+      attr_reader :destinations
 
       # @return [String]
       #
@@ -100,9 +100,16 @@ module XcodeArchiveCache
       # @return [String]
       #
       def destination_flag
+        platform_regexp = Regexp.new("#{platform}", Regexp::IGNORECASE)
+        destination_by_platform = destinations.select {|destination| destination.match?(platform_regexp)}.first
+
         # archives can only be made with generic destination
         #
-        inferred_destination = action == ARCHIVE_ACTION ? GENERIC_DESTINATION : destination
+        inferred_destination = action == ARCHIVE_ACTION ? GENERIC_DESTINATION : destination_by_platform
+        if inferred_destination == nil
+          raise Informative, "Destination not set for #{platform} platform"
+        end
+
         destination_specifier = inferred_destination == GENERIC_DESTINATION ? "generic/platform=#{platform}" : inferred_destination
         "-destination '#{destination_specifier}'"
       end
