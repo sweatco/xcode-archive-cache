@@ -21,7 +21,10 @@ check_for_negative_result() {
 }
 
 TEST_PROJECT_LOCATION="fixtures/test_project/Test"
-TEST_DESTINATION="platform=iOS Simulator,name=iPhone 7,OS=latest"
+IOS_DESTINATION="platform=iOS Simulator,name=iPhone 7,OS=latest"
+WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 4 - 40mm,OS=latest"
+TEST_DESTINATION="${IOS_DESTINATION}|${WATCH_DESTINATION}"
+
 CACHE_LOG_FILE="cache.log"
 XCODEBUILD_LOG_FILE="xcodebuild.log"
 
@@ -46,7 +49,7 @@ perform_test() {
   ../../../../bin/xcode-archive-cache inject --destination="$TEST_DESTINATION" --configuration=Debug --storage=build_cache --log-level=verbose | tee $CACHE_LOG_FILE
   check_for_positive_result "Build and cache dependencies"
 
-  xcodebuild -workspace Test.xcworkspace -scheme Test -destination "$TEST_DESTINATION" -derivedDataPath build test | xcpretty | tee $XCODEBUILD_LOG_FILE
+  xcodebuild -workspace Test.xcworkspace -scheme Test -destination "$IOS_DESTINATION" -derivedDataPath build test | xcpretty | tee $XCODEBUILD_LOG_FILE
   check_for_positive_result "Test app"
 }
 
@@ -109,7 +112,7 @@ update_framework_dependency_string_and_test() {
 
 cd $TEST_PROJECT_LOCATION
 
-ALL_FRAMEWORKS="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework"
+ALL_FRAMEWORKS="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework"
 ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a"
 perform_full_clean && perform_test
 expect_frameworks_to_be_rebuilt $ALL_FRAMEWORKS $CACHE_LOG_FILE
