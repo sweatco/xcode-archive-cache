@@ -88,13 +88,13 @@ module XcodeArchiveCache
       # @return [String]
       #
       def project_flag(project_path)
-        "-project #{project_path}"
+        "-project '#{project_path}'"
       end
 
       # @return [String]
       #
       def configuration_flag
-        "-configuration #{configuration}"
+        "-configuration '#{configuration}'"
       end
 
       # @return [String]
@@ -118,7 +118,7 @@ module XcodeArchiveCache
       # @return [String]
       #
       def scheme_flag(scheme)
-        "-scheme #{scheme}"
+        "-scheme '#{scheme}'"
       end
 
       # @param [String] path
@@ -126,7 +126,7 @@ module XcodeArchiveCache
       # @return [String]
       #
       def derived_data_path_flag(path)
-        "-derivedDataPath #{path}"
+        "-derivedDataPath '#{path}'"
       end
 
       # @return [String]
