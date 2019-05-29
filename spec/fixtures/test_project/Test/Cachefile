@@ -11,4 +11,8 @@ workspace "Test" do
     cache "Pods_Test.framework"
     cache "libStaticDependency.a"
   end
+
+  target "TestWatch Extension" do
+    cache "Pods_TestWatch_Extension.framework"
+  end
 end
