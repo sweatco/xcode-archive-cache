@@ -1,4 +1,5 @@
 PODS:
+  - KeychainAccess (3.2.0)
   - MRProgress (0.8.3):
     - MRProgress/ActivityIndicator (= 0.8.3)
     - MRProgress/Blur (= 0.8.3)
@@ -35,12 +36,14 @@ PODS:
   - SwiftLint (0.32.0)
 
 DEPENDENCIES:
+  - KeychainAccess (~> 3.1)
   - MRProgress (~> 0.8)
   - SDCAlertView (= 2.5.3)
   - SwiftLint (~> 0.27)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
+    - KeychainAccess
     - MRProgress
     - RBBAnimation
     - SDCAlertView
@@ -48,12 +51,13 @@ SPEC REPOS:
     - SwiftLint
 
 SPEC CHECKSUMS:
+  KeychainAccess: 3b1bf8a77eb4c6ea1ce9404c292e48f948954c6b
   MRProgress: 16de7cc9f347e8846797a770db102a323fe7ef09
   RBBAnimation: 4b2d66f6d993febce63cd564da934985313b9c59
   SDCAlertView: 7554e4e7ce1adbefbcc7374e7bae237dad32a8d8
   SDCAutoLayout: e6885bb39ab8e2ec2ff84d158f38035f025f7420
   SwiftLint: 009a898ef2a1c851f45e1b59349bf6ff2ddc990d
 
-PODFILE CHECKSUM: a54303ef1a655bc8101cea2c88b12be0710e4b1f
+PODFILE CHECKSUM: fe48b57c6f9e80f61458c904a79f2ff05e52413d
 
 COCOAPODS: 1.6.2
