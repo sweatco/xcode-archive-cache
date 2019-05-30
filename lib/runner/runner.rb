@@ -8,11 +8,7 @@ module XcodeArchiveCache
     def initialize(config)
       @config = config
 
-      workspace_path = File.absolute_path(config.file_path)
-      workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
-      workspace_dir = File.expand_path("..", workspace_path)
-
-      projects = workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
+      projects = list_projects
       @native_target_finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new(projects)
 
       storage_path = File.absolute_path(config.storage.path)
@@ -27,6 +23,21 @@ module XcodeArchiveCache
       unpacked_artifacts_dir = File.absolute_path(File.join(derived_data_path, "cached"))
       @injection_storage = XcodeArchiveCache::Injection::Storage.new(unpacked_artifacts_dir)
       @injector = XcodeArchiveCache::Injection::Injector.new(config.active_configuration.build_configuration, @injection_storage)
+    end
+
+    def list_projects
+      file_path = File.absolute_path(config.file_path)
+
+      if config.is_a?(XcodeArchiveCache::Config::Project)
+        return [Xcodeproj::Project.new(file_path)]
+      elsif config.is_a?(XcodeArchiveCache::Config::Workspace)
+        workspace = Xcodeproj::Workspace.new_from_xcworkspace(file_path)
+        workspace_dir = File.expand_path("..", file_path)
+
+        return workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
+      end
+
+      raise Informative, "Configuration misses no entry point -- must have either a project or a workspace"
     end
 
     def run
