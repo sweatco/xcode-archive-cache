@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name = "xcode-archive-cache"
-  spec.version = "0.0.2"
+  spec.version = "0.0.3"
   spec.summary = "Xcode archive cache"
   spec.files = Dir.glob("lib/**/*")
   spec.executables = "xcode-archive-cache"
