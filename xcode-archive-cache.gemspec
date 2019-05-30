@@ -1,8 +1,6 @@
-$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
-
 Gem::Specification.new do |spec|
   spec.name = "xcode-archive-cache"
-  spec.version = "0.0.1"
+  spec.version = "0.0.2"
   spec.summary = "Xcode archive cache"
   spec.files = Dir.glob("lib/**/*")
   spec.executables = "xcode-archive-cache"
