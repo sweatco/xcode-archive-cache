@@ -28,14 +28,12 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
       def perform_outgoing_injection(graph, target)
-        graph.nodes.each {|node| add_as_prebuilt_dependency(node, target, false)}
+        graph.nodes.each {|node| add_as_prebuilt_dependency(node, target, node.is_root)}
 
         # pretty dummy but should work in most cases;
         # here we assume that if graph has a pods target
         # then all graph nodes are built as pods and therefore
         # are covered by "Embed Pods Frameworks" script
-        #
-        # TODO: we need to embed all frameworks that were built outside of pods subgraph
         #
         if graph.node_by_name(get_pods_target_name(target))
           pods_fixer.fix_embed_frameworks_script(target, graph.dependent_build_settings, storage.container_dir_path)
@@ -82,22 +80,23 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       #
       def add_as_prebuilt_to_dependents(prebuilt_node)
-        prebuilt_node.dependent.each do |dependent_node|
+        prebuilt_node.all_dependent_nodes.each do |dependent_node|
           next if prebuilt_node.rebuild
 
-          add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, true)
+          should_link = prebuilt_node.dependent.include?(dependent_node)
+          add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, should_link)
         end
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
-      # @param [Boolean] should_link
       #
       def add_as_prebuilt_dependency(prebuilt_node, dependent_target, should_link)
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
+
         if prebuilt_node.has_framework_product?
-          add_as_prebuilt_framework(prebuilt_node, dependent_target)
+          add_as_prebuilt_framework(prebuilt_node, dependent_target, should_link)
         elsif prebuilt_node.has_static_library_product?
           add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
         else
@@ -109,14 +108,18 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
+      # @param [Boolean] should_link
       #
-      def add_as_prebuilt_framework(prebuilt_node, dependent_target)
+      def add_as_prebuilt_framework(prebuilt_node, dependent_target, should_link)
         build_configuration = find_build_configuration(dependent_target)
 
         artifact_location = storage.get_storage_path(prebuilt_node)
         build_flags_changer.add_framework_search_path(build_configuration, artifact_location)
-        build_flags_changer.add_framework_linker_flag(build_configuration, prebuilt_node)
         build_flags_changer.add_framework_headers_iquote(build_configuration, artifact_location, prebuilt_node)
+
+        if should_link
+          build_flags_changer.add_framework_linker_flag(build_configuration, prebuilt_node)
+        end
 
         # remove headers so they don't cause non-module includes
         headers_mover.delete_headers(prebuilt_node)
@@ -132,7 +135,7 @@ module XcodeArchiveCache
       def add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
         build_configuration = find_build_configuration(dependent_target)
 
-        if should_link || prebuilt_node.is_root
+        if should_link
           artifact_location = storage.get_storage_path(prebuilt_node)
           build_flags_changer.add_library_search_path(build_configuration, artifact_location)
           build_flags_changer.add_library_linker_flag(build_configuration, prebuilt_node)
