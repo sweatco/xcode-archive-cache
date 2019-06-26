@@ -257,6 +257,7 @@ module XcodeArchiveCache
         fprofile-generate
         F
         iapinotes-modules
+        iframework
         iframeworkwithsysroot
         iprefix
         iquote
