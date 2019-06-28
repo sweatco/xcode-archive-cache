@@ -100,7 +100,7 @@ expect_libs_not_to_be_rebuilt() {
 }
 
 update_single_pod() {
-  sed -i.bak "s+2.5.3+2.5.4+g" Podfile
+  sed -i.bak "s+pod 'SDCAlertView', '= 2.5.3'+pod 'SDCAlertView', '= 2.5.4'+g" Podfile
   check_for_positive_result "Update single pod"
 }
 
