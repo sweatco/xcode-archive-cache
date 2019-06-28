@@ -20,7 +20,8 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
       def perform_internal_injection(graph)
-        graph.nodes.each {|node| add_as_prebuilt_to_dependents(node)}
+        inject_cached(graph.nodes)
+        add_header_paths(graph.nodes)
         save_graph_projects(graph)
       end
 
@@ -29,6 +30,7 @@ module XcodeArchiveCache
       #
       def perform_outgoing_injection(graph, target)
         graph.nodes.each {|node| add_as_prebuilt_dependency(node, target, node.is_root)}
+        add_header_paths_to_target(target, storage.get_all_headers_storage_paths)
 
         # pretty dummy but should work in most cases;
         # here we assume that if graph has a pods target
@@ -77,15 +79,59 @@ module XcodeArchiveCache
       #
       attr_reader :framework_embedder
 
+      # @param [Array<XcodeArchiveCache::BuildGraph::Node>] nodes
+      #
+      def inject_cached(nodes)
+        cached_nodes = nodes.select {|node| !node.rebuild}
+        cached_nodes.each do |node|
+          headers_mover.prepare_headers_for_injection(node)
+          add_as_prebuilt_to_dependents(node)
+        end
+      end
+
+      # @param [Array<XcodeArchiveCache::BuildGraph::Node>] nodes
+      #
+      def add_header_paths(nodes)
+        header_storage_paths = storage.get_all_headers_storage_paths
+        nodes
+            .select {|node| node.rebuild}
+            .each { |node|  add_header_paths_to_target(node.native_target, header_storage_paths) }
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      # @param [Array<String>] paths
+      #
+      def add_header_paths_to_target(target, paths)
+        return if paths == nil
+
+        build_configuration = find_build_configuration(target)
+        paths.each do |path|
+          build_flags_changer.add_headers_search_path(build_configuration, path)
+          build_flags_changer.add_iquote_path(build_configuration, path)
+          build_flags_changer.add_capital_i_path(build_configuration, path)
+        end
+      end
+
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       #
       def add_as_prebuilt_to_dependents(prebuilt_node)
-        prebuilt_node.all_dependent_nodes.each do |dependent_node|
-          next if prebuilt_node.rebuild
-
+        dependent_to_rebuild = prebuilt_node
+                                   .all_dependent_nodes
+                                   .select {|node| node.rebuild}
+        dependent_to_rebuild.each do |dependent_node|
           should_link = prebuilt_node.dependent.include?(dependent_node)
           add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, should_link)
         end
+
+        remove_native_target_from_project(prebuilt_node)
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Graph] graph
+      #
+      def save_graph_projects(graph)
+        projects = graph.nodes.map(&:native_target).map(&:project).uniq
+        debug("updating #{projects.length} projects")
+        projects.each {|project| project.save}
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
@@ -93,7 +139,6 @@ module XcodeArchiveCache
       #
       def add_as_prebuilt_dependency(prebuilt_node, dependent_target, should_link)
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
-
 
         if prebuilt_node.has_framework_product?
           add_as_prebuilt_framework(prebuilt_node, dependent_target, should_link)
@@ -122,10 +167,9 @@ module XcodeArchiveCache
         end
 
         # remove headers so they don't cause non-module includes
-        headers_mover.delete_headers(prebuilt_node)
+        #headers_mover.delete_headers(prebuilt_node)
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
-        remove_native_target_from_project(prebuilt_node)
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
@@ -141,16 +185,7 @@ module XcodeArchiveCache
           build_flags_changer.add_library_linker_flag(build_configuration, prebuilt_node)
         end
 
-        headers_mover.prepare_headers_for_injection(prebuilt_node)
-
-        storage.get_all_headers_storage_paths(prebuilt_node)&.each do |path|
-          build_flags_changer.add_headers_search_path(build_configuration, path)
-          build_flags_changer.add_iquote_path(build_configuration, path)
-          build_flags_changer.add_capital_i_path(build_configuration, path)
-        end
-
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
-        remove_native_target_from_project(prebuilt_node)
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
@@ -179,14 +214,6 @@ module XcodeArchiveCache
       #
       def remove_native_target_from_project(node)
         node.native_target.project.targets.delete(node.native_target)
-      end
-
-      # @param [XcodeArchiveCache::BuildGraph::Graph] graph
-      #
-      def save_graph_projects(graph)
-        projects = graph.nodes.map(&:native_target).map(&:project).uniq
-        debug("updating #{projects.length} projects")
-        projects.each {|project| project.save}
       end
     end
   end
