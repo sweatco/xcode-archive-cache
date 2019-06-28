@@ -29,7 +29,11 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
       def perform_outgoing_injection(graph, target)
-        graph.nodes.each {|node| add_as_prebuilt_dependency(node, target, node.is_root)}
+        graph.nodes.each do |node|
+          add_as_prebuilt_dependency(node, target, node.is_root)
+          remove_native_target_from_project(node)
+        end
+        
         add_header_paths_to_target(target, storage.get_all_headers_storage_paths)
 
         # pretty dummy but should work in most cases;
@@ -213,6 +217,7 @@ module XcodeArchiveCache
       # as implicit dependency
       #
       def remove_native_target_from_project(node)
+        debug("deleting #{node.name} target")
         node.native_target.project.targets.delete(node.native_target)
       end
     end
