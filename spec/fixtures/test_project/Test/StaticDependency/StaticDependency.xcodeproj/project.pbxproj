@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4461D12D2293FE82004F46B4 /* libLibraryWithFrameworkDependency.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4461D12A2293FE73004F46B4 /* libLibraryWithFrameworkDependency.a */; };
 		4461D16022940A29004F46B4 /* StaticDependency.m in Sources */ = {isa = PBXBuildFile; fileRef = 4461D15F22940A29004F46B4 /* StaticDependency.m */; };
+		4467F94422C6784C003DBC92 /* libLibraryThatUsesSibling.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4467F94022C677ED003DBC92 /* libLibraryThatUsesSibling.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,6 +26,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4461D1162293FE61004F46B4;
 			remoteInfo = LibraryWithFrameworkDependency;
+		};
+		4467F93F22C677ED003DBC92 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4467F93822C677ED003DBC92 /* LibraryThatUsesSibling.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4467F92B22C677B5003DBC92;
+			remoteInfo = LibraryThatUsesSibling;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -44,6 +52,7 @@
 		4461D1252293FE73004F46B4 /* LibraryWithFrameworkDependency.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = LibraryWithFrameworkDependency.xcodeproj; sourceTree = "<group>"; };
 		4461D15E22940A29004F46B4 /* StaticDependency.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StaticDependency.h; sourceTree = "<group>"; };
 		4461D15F22940A29004F46B4 /* StaticDependency.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StaticDependency.m; sourceTree = "<group>"; };
+		4467F93822C677ED003DBC92 /* LibraryThatUsesSibling.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = LibraryThatUsesSibling.xcodeproj; sourceTree = "<group>"; };
 		44F83BAE2293FD7100D9B6AC /* libStaticDependency.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libStaticDependency.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -52,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4467F94422C6784C003DBC92 /* libLibraryThatUsesSibling.a in Frameworks */,
 				4461D12D2293FE82004F46B4 /* libLibraryWithFrameworkDependency.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -62,6 +72,7 @@
 		4461D1212293FE73004F46B4 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				4467F93722C677ED003DBC92 /* LibraryThatUsesSibling */,
 				4461D1222293FE73004F46B4 /* LibraryWithFrameworkDependency */,
 			);
 			path = Libraries;
@@ -88,6 +99,22 @@
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4467F93722C677ED003DBC92 /* LibraryThatUsesSibling */ = {
+			isa = PBXGroup;
+			children = (
+				4467F93822C677ED003DBC92 /* LibraryThatUsesSibling.xcodeproj */,
+			);
+			path = LibraryThatUsesSibling;
+			sourceTree = "<group>";
+		};
+		4467F93922C677ED003DBC92 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4467F94022C677ED003DBC92 /* libLibraryThatUsesSibling.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		44F83BA52293FD7100D9B6AC = {
@@ -165,6 +192,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 4467F93922C677ED003DBC92 /* Products */;
+					ProjectRef = 4467F93822C677ED003DBC92 /* LibraryThatUsesSibling.xcodeproj */;
+				},
+				{
 					ProductGroup = 4461D1262293FE73004F46B4 /* Products */;
 					ProjectRef = 4461D1252293FE73004F46B4 /* LibraryWithFrameworkDependency.xcodeproj */;
 				},
@@ -182,6 +213,13 @@
 			fileType = archive.ar;
 			path = libLibraryWithFrameworkDependency.a;
 			remoteRef = 4461D1292293FE73004F46B4 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4467F94022C677ED003DBC92 /* libLibraryThatUsesSibling.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libLibraryThatUsesSibling.a;
+			remoteRef = 4467F93F22C677ED003DBC92 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */

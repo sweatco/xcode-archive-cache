@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		4461D154229400D5004F46B4 /* FrameworkDependency.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4461D152229400C9004F46B4 /* FrameworkDependency.framework */; };
 		4461D15D22940959004F46B4 /* LibraryWithFrameworkDependency.m in Sources */ = {isa = PBXBuildFile; fileRef = 4461D15C22940959004F46B4 /* LibraryWithFrameworkDependency.m */; };
+		4467F94322C67822003DBC92 /* LibraryWithFrameworkDependency.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4461D15B22940959004F46B4 /* LibraryWithFrameworkDependency.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +36,7 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
+				4467F94322C67822003DBC92 /* LibraryWithFrameworkDependency.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,11 +113,22 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		4467F94222C67817003DBC92 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		4461D1162293FE61004F46B4 /* LibraryWithFrameworkDependency */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4461D11E2293FE61004F46B4 /* Build configuration list for PBXNativeTarget "LibraryWithFrameworkDependency" */;
 			buildPhases = (
+				4467F94222C67817003DBC92 /* Headers */,
 				4461D1132293FE61004F46B4 /* Sources */,
 				4461D1142293FE61004F46B4 /* Frameworks */,
 				4461D1152293FE61004F46B4 /* CopyFiles */,
