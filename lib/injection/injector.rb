@@ -33,7 +33,7 @@ module XcodeArchiveCache
           add_as_prebuilt_dependency(node, target, node.is_root)
           remove_native_target_from_project(node)
         end
-        
+
         add_header_paths_to_target(target, storage.get_all_headers_storage_paths)
 
         # pretty dummy but should work in most cases;
@@ -97,6 +97,7 @@ module XcodeArchiveCache
       #
       def add_header_paths(nodes)
         header_storage_paths = storage.get_all_headers_storage_paths
+
         nodes
             .select {|node| node.rebuild}
             .each { |node|  add_header_paths_to_target(node.native_target, header_storage_paths) }
@@ -145,7 +146,7 @@ module XcodeArchiveCache
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
         if prebuilt_node.has_framework_product?
-          add_as_prebuilt_framework(prebuilt_node, dependent_target, should_link)
+          add_as_prebuilt_framework(prebuilt_node, dependent_target)
         elsif prebuilt_node.has_static_library_product?
           add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
         else
@@ -157,21 +158,13 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
-      # @param [Boolean] should_link
       #
-      def add_as_prebuilt_framework(prebuilt_node, dependent_target, should_link)
+      def add_as_prebuilt_framework(prebuilt_node, dependent_target)
         build_configuration = find_build_configuration(dependent_target)
 
         artifact_location = storage.get_storage_path(prebuilt_node)
         build_flags_changer.add_framework_search_path(build_configuration, artifact_location)
         build_flags_changer.add_framework_headers_iquote(build_configuration, artifact_location, prebuilt_node)
-
-        if should_link
-          build_flags_changer.add_framework_linker_flag(build_configuration, prebuilt_node)
-        end
-
-        # remove headers so they don't cause non-module includes
-        #headers_mover.delete_headers(prebuilt_node)
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
       end
@@ -186,7 +179,6 @@ module XcodeArchiveCache
         if should_link
           artifact_location = storage.get_storage_path(prebuilt_node)
           build_flags_changer.add_library_search_path(build_configuration, artifact_location)
-          build_flags_changer.add_library_linker_flag(build_configuration, prebuilt_node)
         end
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)

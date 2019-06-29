@@ -41,17 +41,6 @@ module XcodeArchiveCache
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
-      def add_library_linker_flag(build_configuration, node)
-        linker_flag = get_static_lib_linker_flag(node)
-        if linker_flag
-          debug("using linker flag #{linker_flag}")
-          add_linker_flag(build_configuration, linker_flag)
-        end
-      end
-
-      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [String] path
       #
       def add_headers_search_path(build_configuration, path)
