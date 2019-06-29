@@ -167,21 +167,6 @@ module XcodeArchiveCache
 
         "-framework \"#{framework_name}\""
       end
-
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
-      # @return [String]
-      #
-      #         libSomething.a -> -l"Something"
-      #
-      def get_static_lib_linker_flag(node)
-        return unless node.product_file_name
-
-        library_name = File.basename(node.product_file_name, File.extname(node.product_file_name)).gsub("lib", "")
-        return unless library_name
-
-        "-l\"#{library_name}\""
-      end
     end
   end
 end
