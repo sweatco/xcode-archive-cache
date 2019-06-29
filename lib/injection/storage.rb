@@ -104,7 +104,7 @@ module XcodeArchiveCache
         paths = get_headers_storage_paths(node) || []
         containing_directory = File.dirname(path)
         unless paths.include?(containing_directory)
-          paths.push(path)
+          paths.push(containing_directory)
           set_all_headers_storage_paths(paths, node)
         end
       end
