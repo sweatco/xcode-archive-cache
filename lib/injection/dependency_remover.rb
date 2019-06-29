@@ -12,7 +12,6 @@ module XcodeArchiveCache
         debug("removing #{prebuilt_target.name} from #{dependent_target.display_name}")
 
         remove_from_dependencies(prebuilt_target, dependent_target)
-        remove_from_linking(prebuilt_node, dependent_target)
         remove_from_schemes(prebuilt_target, dependent_target)
 
         debug("finished removing #{prebuilt_target.name} from #{dependent_target.display_name}")
