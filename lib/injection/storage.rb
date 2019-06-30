@@ -79,6 +79,8 @@ module XcodeArchiveCache
       def get_all_headers_storage_paths
         headers_storage_dir_paths
             .map {|_, path| path}
+            .flatten
+            .uniq
       end
 
       private
