@@ -30,6 +30,7 @@ module XcodeArchiveCache
       #
       def perform_outgoing_injection(graph, target)
         graph.nodes.each do |node|
+          headers_mover.prepare_headers_for_injection(node)
           add_as_prebuilt_dependency(node, target, node.is_root)
           remove_native_target_from_project(node)
         end
@@ -107,6 +108,8 @@ module XcodeArchiveCache
       # @param [Array<String>] paths
       #
       def add_header_paths_to_target(target, paths)
+        debug("adding #{paths} to #{target.display_name}")
+
         return if paths == nil
 
         build_configuration = find_build_configuration(target)
