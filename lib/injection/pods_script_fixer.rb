@@ -9,17 +9,22 @@ module XcodeArchiveCache
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
-      # @param [XcodeArchiveCache::BuildSettings::Container] build_settings
+      # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       # @param [String] products_dir
       #
-      def fix_embed_frameworks_script(target, build_settings, products_dir)
+      def fix_embed_frameworks_script(target, graph, products_dir)
+        build_settings = graph.dependent_build_settings
         file_path = find_embed_frameworks_script(target, build_settings)
         return unless file_path
 
         info("fixing #{file_path}")
-        original_script = File.read(file_path)
-        fixed_script = original_script.gsub("${BUILT_PRODUCTS_DIR}", products_dir)
-        File.open(file_path, "w") {|file| file.puts(fixed_script)}
+        script = File.read(file_path)
+        graph.nodes.each do |node|
+          relative_product_path = "#{node.native_target.display_name}/#{node.product_file_name}"
+          script = script.gsub("${BUILT_PRODUCTS_DIR}/#{relative_product_path}", File.join(products_dir, relative_product_path))
+        end
+
+        File.open(file_path, "w") {|file| file.puts(script)}
       end
 
       private

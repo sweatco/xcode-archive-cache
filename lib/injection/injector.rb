@@ -43,7 +43,7 @@ module XcodeArchiveCache
         # are covered by "Embed Pods Frameworks" script
         #
         if graph.node_by_name(get_pods_target_name(target))
-          pods_fixer.fix_embed_frameworks_script(target, graph.dependent_build_settings, storage.container_dir_path)
+          pods_fixer.fix_embed_frameworks_script(target, graph, storage.container_dir_path)
         else
           framework_nodes = graph.nodes.select {|node| node.has_framework_product?}
           framework_file_paths = framework_nodes.map {|node| File.join(storage.get_storage_path(node), node.product_file_name)}
