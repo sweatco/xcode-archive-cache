@@ -99,6 +99,11 @@ expect_libs_not_to_be_rebuilt() {
   done
 }
 
+add_sibling_import() {
+  sed -i.bak "s+// to be removed during tests: ++g" StaticDependency/Libraries/LibraryThatUsesSibling/LibraryThatUsesSibling/LibraryThatUsesSibling.h
+  check_for_positive_result "Add sibling import"
+}
+
 update_single_pod() {
   sed -i.bak "s+pod 'SDCAlertView', '= 2.5.3'+pod 'SDCAlertView', '= 2.5.4'+g" Podfile
   check_for_positive_result "Update single pod"
@@ -113,11 +118,22 @@ update_framework_dependency_string_and_test() {
 cd $TEST_PROJECT_LOCATION
 
 ALL_FRAMEWORKS="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework"
-ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a"
+ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a|libLibraryThatUsesSibling.a"
 perform_full_clean && perform_test
 expect_frameworks_to_be_rebuilt $ALL_FRAMEWORKS $CACHE_LOG_FILE
 expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt $ALL_LIBS $CACHE_LOG_FILE
+expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
+
+# add sibling import, expecting changed library to be rebuilt
+#
+clean_but_leave_build_cache && add_sibling_import
+
+LIBS_EXPECTED_TO_BE_REBUILT="libLibraryThatUsesSibling.a|libStaticDependency.a"
+perform_test
+expect_frameworks_to_be_rebuilt "" $CACHE_LOG_FILE
+expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_libs_to_be_rebuilt $LIBS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
 # update single pod, expecting it to be rebuilt
@@ -136,8 +152,9 @@ expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 clean_but_leave_build_cache && update_framework_dependency_string_and_test
 
 FRAMEWORKS_EXPECTED_TO_BE_REBUILT="FrameworkDependency.framework"
+LIBS_EXPECTED_TO_BE_REBUILT="libLibraryWithFrameworkDependency.a|libStaticDependency.a"
 perform_test
 expect_frameworks_to_be_rebuilt $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
 expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
-expect_libs_to_be_rebuilt $ALL_LIBS $CACHE_LOG_FILE
+expect_libs_to_be_rebuilt $LIBS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
