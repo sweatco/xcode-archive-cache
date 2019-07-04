@@ -117,7 +117,7 @@ module XcodeArchiveCache
         graph.nodes.each do |node|
           debug("calculating sha for #{node.name}")
           sha_calculator.calculate(node)
-          debug("sha calculated for #{node.name}")
+          debug("sha calculated for #{node.name}: #{node.sha}")
         end
       end
 
