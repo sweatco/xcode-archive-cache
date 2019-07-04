@@ -13,13 +13,6 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
-      def delete_headers(node)
-        debug("deleting headers of #{node.name}")
-        node.native_target.headers_build_phase.files.clear
-      end
-
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
       def prepare_headers_for_injection(node)
         debug("checking #{node.name} headers")
         header_count = 0
