@@ -21,9 +21,14 @@ module XcodeArchiveCache
       # @param [String] command
       # @param [Boolean] print_command
       #
+      # @return [Boolean] true if command succeeded and returned 0, false otherwise
+      #
       def execute(command, print_command = false)
         actual_command = extend_for_pipefail(command, print_command)
-        system actual_command
+        result = system actual_command
+
+        return false if result == nil
+        result
       end
 
       private
