@@ -18,7 +18,7 @@ Native targets cache for Xcode archive builds.
 
 # Setup
 
-XcodeArchiveCache has a simple DSL similar to Cocoapods DSL. Configuration is stored in a file called `Cachefile`. Place `Cachefile` in project's root directory.
+XcodeArchiveCache has a simple DSL similar to Cocoapods DSL. Configuration is stored in a file called `Cachefile`. Place `Cachefile` in the project's root directory.
 
 Example configuration:
 
@@ -46,5 +46,7 @@ xcode-archive-cache inject --configuration=release --storage="$HOME/build_cache"
 
 # Usage
 
-- Run `xcode-archive-cache` **before building app**. This will update cache and inject cached products into project.
-- Build app as usual (Xcode, xcodebuild, Fastlane)
+- Run `xcode-archive-cache` **before building app**. This will update the cache and inject cached products into the project.
+- Archive the app as usual (Xcode, xcodebuild, Fastlane)
+
+Please refer to the [example project](https://github.com/sweatco/xcode-archive-cache-example) for usage examples.
