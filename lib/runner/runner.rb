@@ -37,7 +37,7 @@ module XcodeArchiveCache
         return workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
       end
 
-      raise Informative, "Configuration misses no entry point -- must have either a project or a workspace"
+      raise Informative, "Configuration misses entry point -- must have either a project or a workspace"
     end
 
     def run
