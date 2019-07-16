@@ -29,6 +29,12 @@ module XcodeArchiveCache
       def ==(other)
         other && other.all == all && other.filtered == filtered
       end
+
+      # @return [String]
+      #
+      def filtered_to_string
+        filtered.map {|name, value| "#{name} = #{value}"}.join("\n")
+      end
     end
 
     class Loader
