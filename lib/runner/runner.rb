@@ -29,7 +29,7 @@ module XcodeArchiveCache
       file_path = File.absolute_path(config.file_path)
 
       if config.is_a?(XcodeArchiveCache::Config::Project)
-        return [Xcodeproj::Project.new(file_path)]
+        return [Xcodeproj::Project.open(file_path)]
       elsif config.is_a?(XcodeArchiveCache::Config::Workspace)
         workspace = Xcodeproj::Workspace.new_from_xcworkspace(file_path)
         workspace_dir = File.expand_path("..", file_path)
