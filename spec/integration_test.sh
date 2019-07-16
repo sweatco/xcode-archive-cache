@@ -20,13 +20,13 @@ check_for_negative_result() {
   fi
 }
 
-TEST_PROJECT_LOCATION="fixtures/test_project/Test"
+TEST_PROJECT_LOCATION="$PWD/fixtures/test_project/Test"
 IOS_DESTINATION="platform=iOS Simulator,name=iPhone 7,OS=latest"
 WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 4 - 40mm,OS=latest"
 TEST_DESTINATION="${IOS_DESTINATION}|${WATCH_DESTINATION}"
 
-CACHE_LOG_FILE="cache.log"
-XCODEBUILD_LOG_FILE="xcodebuild.log"
+CACHE_LOG_FILE="$TEST_PROJECT_LOCATION/cache.log"
+XCODEBUILD_LOG_FILE="$TEST_PROJECT_LOCATION/xcodebuild.log"
 
 perform_full_clean() {
   git clean -xdf . && git checkout HEAD -- .
@@ -42,7 +42,7 @@ make_filename_list_enumerable() {
   echo "$1" | tr "|" " "
 }
 
-perform_test() {
+perform_full_app_test() {
   pod install
   check_for_positive_result "Install pods"
 
@@ -51,6 +51,20 @@ perform_test() {
 
   xcodebuild -workspace Test.xcworkspace -scheme Test -destination "$IOS_DESTINATION" -derivedDataPath build test | xcpretty | tee $XCODEBUILD_LOG_FILE
   check_for_positive_result "Test app"
+}
+
+perform_static_dependency_test() {
+  pod install
+  check_for_positive_result "Install pods"
+
+  ROOT_PWD=$PWD
+  cd StaticDependency
+  check_for_positive_result "Go to StaticDependency dir"
+
+  $ROOT_PWD/../../../../bin/xcode-archive-cache inject --destination="$TEST_DESTINATION" --configuration=Debug --storage=$ROOT_PWD/build_cache --log-level=verbose | tee $CACHE_LOG_FILE
+  check_for_positive_result "Build and cache dependencies"
+
+  cd -
 }
 
 expect_frameworks_to_be_rebuilt() {
@@ -116,10 +130,11 @@ update_framework_dependency_string_and_test() {
 }
 
 cd $TEST_PROJECT_LOCATION
+check_for_positive_result "Go to test project dir"
 
 ALL_FRAMEWORKS="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework"
 ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a|libLibraryThatUsesSibling.a"
-perform_full_clean && perform_test
+perform_full_clean && perform_full_app_test
 expect_frameworks_to_be_rebuilt $ALL_FRAMEWORKS $CACHE_LOG_FILE
 expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt $ALL_LIBS $CACHE_LOG_FILE
@@ -130,7 +145,7 @@ expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 clean_but_leave_build_cache && add_sibling_import
 
 LIBS_EXPECTED_TO_BE_REBUILT="libLibraryThatUsesSibling.a|libStaticDependency.a"
-perform_test
+perform_full_app_test
 expect_frameworks_to_be_rebuilt "" $CACHE_LOG_FILE
 expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt $LIBS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
@@ -141,7 +156,7 @@ expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 clean_but_leave_build_cache && update_single_pod
 
 FRAMEWORKS_EXPECTED_TO_BE_REBUILT="SDCAlertView.framework|Pods_Test.framework"
-perform_test
+perform_full_app_test
 expect_frameworks_to_be_rebuilt $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
 expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
@@ -153,8 +168,15 @@ clean_but_leave_build_cache && update_framework_dependency_string_and_test
 
 FRAMEWORKS_EXPECTED_TO_BE_REBUILT="FrameworkDependency.framework"
 LIBS_EXPECTED_TO_BE_REBUILT="libLibraryWithFrameworkDependency.a|libStaticDependency.a"
-perform_test
+perform_full_app_test
 expect_frameworks_to_be_rebuilt $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
 expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt $LIBS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
+
+# ask for StaticDependency rebuild, expecting nothing to be rebuilt
+#
+clean_but_leave_build_cache
+perform_static_dependency_test
+expect_frameworks_to_be_rebuilt "" $CACHE_LOG_FILE
+expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
