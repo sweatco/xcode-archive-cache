@@ -18,3 +18,11 @@ target 'TestWatch Extension' do
 
     pod 'KeychainAccess', '~> 3.1'
 end
+
+post_install do |installer|
+    installer.pods_project.targets
+        .select {|target| target.name == "KeychainAccess"}
+        .map(&:build_configurations)
+        .flatten
+        .each {|configuration| configuration.build_settings['SWIFT_VERSION'] = '4.0'}
+end
