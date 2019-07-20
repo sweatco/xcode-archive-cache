@@ -64,6 +64,10 @@ module XcodeArchiveCache
       def cache(name)
         current_target.dependencies.push(name)
       end
+
+      def cache_itself
+        current_target.dependencies.push(current_target.name)
+      end
     end
   end
 end

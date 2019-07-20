@@ -25,8 +25,16 @@ module XcodeArchiveCache
       # @param [String] name
       #        Native target display name
       #
+      # @return [XcodeArchiveCache::BuildGraph::Node]
+      #
       def node_by_name(name)
         nodes.select {|node| node.name == name}.first
+      end
+
+      # @return [XcodeArchiveCache::BuildGraph::Node]
+      #
+      def root_node
+        nodes.select {|node| node.is_root}.first
       end
 
       def to_s

@@ -12,6 +12,8 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
       def embed(framework_file_paths, target)
+        return unless target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:application]
+
         dynamic_framework_file_paths = framework_file_paths.select do |path|
           binary_name = File.basename(path, ".framework")
           binary_path = File.join(path, binary_name)

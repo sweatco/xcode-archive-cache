@@ -18,6 +18,9 @@ module XcodeArchiveCache
         File.exist?(path) ? path : nil
       end
 
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      # @param [String] path
+      #
       def store(node, path)
         archive_path = path_inside_cache_dir(node)
         archive_directory = File.expand_path("..", archive_path)
@@ -26,6 +29,7 @@ module XcodeArchiveCache
         end
 
         archiver.archive(path, archive_path)
+        save_state(node, archive_path)
       end
 
       private
@@ -38,8 +42,33 @@ module XcodeArchiveCache
       #
       attr_reader :archiver
 
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      # @return [String]
+      #
       def path_inside_cache_dir(node)
         File.join(cache_dir_path, node.name, node.sha)
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      # @param [String] archive_path
+      #
+      # Simply writes build settings and dependency SHAs to a file
+      # Useful for debugging and investigation purposes
+      #
+      def save_state(node, archive_path)
+        state_file_path = archive_path + ".state"
+
+        if File.exist?(state_file_path)
+          raise ArgumentError.new, "State file already exists: #{state_file_path}"
+        end
+
+        dependency_shas = node.dependencies
+                              .map {|dependency| dependency.name + ": " + dependency.sha}
+                              .join("\n")
+        state = node.build_settings.filtered_to_string + "\n\nDependencies:\n" + dependency_shas + "\n"
+
+        File.write(state_file_path, state)
       end
     end
   end

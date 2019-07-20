@@ -29,6 +29,11 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
       def perform_outgoing_injection(graph, target)
+        root_node = graph.root_node
+        if root_node.native_target.project == target.project && root_node.native_target.uuid == target.uuid
+          return
+        end
+
         graph.nodes.each do |node|
           headers_mover.prepare_headers_for_injection(node)
           add_as_prebuilt_dependency(node, target, node.is_root)
@@ -61,7 +66,7 @@ module XcodeArchiveCache
       attr_reader :configuration_name
 
       # @return [Storage]
-      # 
+      #
       attr_reader :storage
 
       # @return [HeadersMover]
@@ -101,7 +106,7 @@ module XcodeArchiveCache
 
         nodes
             .select {|node| node.rebuild}
-            .each { |node|  add_header_paths_to_target(node.native_target, header_storage_paths) }
+            .each {|node| add_header_paths_to_target(node.native_target, header_storage_paths)}
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target

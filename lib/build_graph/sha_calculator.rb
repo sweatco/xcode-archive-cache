@@ -14,7 +14,7 @@ module XcodeArchiveCache
         end
 
         auxiliary_file = Tempfile.new(node.name)
-        build_settings = settings_hash_to_string(node.build_settings.filtered)
+        build_settings = node.build_settings.filtered_to_string
         save_auxiliary_data(build_settings, dependency_shas, auxiliary_file)
 
         input_paths = list_input_paths(node)
@@ -64,14 +64,6 @@ module XcodeArchiveCache
 
           []
         end
-      end
-
-      # @param [Hash{String => String}] hash
-      #
-      # @return [String]
-      #
-      def settings_hash_to_string(hash)
-        hash.map {|name, value| "#{name} = #{value}"}.join("\n")
       end
 
       # @param [Tempfile] tempfile
