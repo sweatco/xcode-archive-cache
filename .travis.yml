@@ -4,7 +4,7 @@ branches:
     - master
 osx_image: xcode10.2
 before_install:
-  - bundle install --deployment
+  - bundle install --deployment && pod repo update
 install: true
 script:
   - bundle exec rspec && cd spec && ./integration_test.sh
