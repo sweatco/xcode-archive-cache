@@ -1,0 +1,10 @@
+language: objective-c
+branches:
+  only:
+    - master
+osx_image: xcode10.2
+before_install:
+  - bundle install --deployment
+install: true
+script:
+  - bundle exec rspec && cd spec && ./integration_test.sh
