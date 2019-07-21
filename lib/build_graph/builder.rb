@@ -19,11 +19,10 @@ module XcodeArchiveCache
       def build_graph(dependent_target, dependency_target)
         native_target_finder.set_platform_name_filter(dependency_target.platform_name)
 
-        build_settings = load_setting_for_target(dependent_target)
-        graph = Graph.new(dependency_target.project, build_settings)
+        graph = Graph.new(dependency_target.project)
 
         add_to_graph(dependency_target, graph, true)
-        load_settings(graph)
+        load_settings(graph, dependent_target)
         calculate_shas(graph)
 
         graph
@@ -122,32 +121,33 @@ module XcodeArchiveCache
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
       #
-      def load_settings(graph)
-        counter = 1
+      def load_settings(graph, dependent_target)
+        project_paths = graph.nodes
+                            .map {|node| node.native_target}
+                            .push(dependent_target)
+                            .map {|target| target.project.path}
+                            .sort
+                            .uniq
+        info("loading settings for #{project_paths.length} projects")
+        build_settings_loader.load_settings(project_paths)
 
-        graph.nodes.each do |node|
-          node_settings = load_setting_for_target(node.native_target)
-          unless node_settings
-            raise Informative, "No build settings loaded for #{node.name}"
-          end
-
-          node.build_settings = node_settings
-
-          debug("settings loaded for #{node.name} (#{counter} / #{graph.nodes.length})")
-          counter += 1
-        end
+        graph.dependent_build_settings = get_settings(dependent_target)
+        graph.nodes.each {|node| node.build_settings = get_settings(node.native_target)}
       end
 
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
-      def load_setting_for_target(target)
-        info("loading settings for #{target.display_name}")
+      def get_settings(target)
+        info("getting settings for #{target.display_name}")
+        build_settings = build_settings_loader.get_settings(target.project.path, target.display_name)
+        unless build_settings
+          raise Informative, "No build settings loaded for #{target.display_name}"
+        end
 
-        project_path = target.project.path
-        build_settings_loader.load_settings(project_path)
-        build_settings_loader.get_settings(project_path, target.display_name)
+        build_settings
       end
     end
   end

@@ -1,6 +1,6 @@
 RSpec.describe XcodeArchiveCache::BuildGraph::Graph, "#graph" do
   before :each do
-    @graph = XcodeArchiveCache::BuildGraph::Graph.new(nil, nil)
+    @graph = XcodeArchiveCache::BuildGraph::Graph.new(nil)
 
     first_target = Xcodeproj::Project::Object::PBXNativeTarget.new(nil, "first_node_uuid")
     @first_node = XcodeArchiveCache::BuildGraph::Node.new("first_node", first_target)
