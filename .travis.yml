@@ -3,6 +3,10 @@ branches:
   only:
     - master
 osx_image: xcode10.2
+cache:
+  bundler: true
+  cocoapods: true
+podfile: spec/fixtures/test_project/Test/Podfile
 before_install:
   - bundle install --deployment && pod repo update
 install: true
