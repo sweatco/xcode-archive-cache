@@ -52,10 +52,12 @@ module XcodeArchiveCache
       def load_settings(project_paths)
         paths_without_settings = project_paths.select {|path| settings[path] == nil}
 
-        Thread.abort_on_exception = true
         threads = []
         paths_without_settings.each do |path|
-          threads << Thread.new(path) {|project_path| [project_path, executor.load_build_settings(project_path)] }
+          threads << Thread.new(path) do |project_path|
+            Thread.current.abort_on_exception = true
+            [project_path, executor.load_build_settings(project_path)]
+          end
         end
 
         threads.each do |thread|
