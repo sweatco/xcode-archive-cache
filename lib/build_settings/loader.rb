@@ -47,20 +47,28 @@ module XcodeArchiveCache
         @settings = Hash.new
       end
 
-      # @param [String] project_path
+      # @param [Array<String>] project_paths
       #
-      # @return [Hash{String => String}]
-      #         Target build settings keyed by target name
-      #
-      def load_settings(project_path)
-        return if settings[project_path]
+      def load_settings(project_paths)
+        paths_without_settings = project_paths.select {|path| settings[path] == nil}
 
-        all_targets_settings = executor.load_build_settings(project_path)
-        settings[project_path] = extractor.extract_per_target(all_targets_settings)
+        threads = paths_without_settings.map do |path|
+          Thread.new(path) do |project_path|
+            Thread.current.abort_on_exception = true
+            [project_path, executor.load_build_settings(project_path)]
+          end
+        end
+
+        threads.each do |thread|
+          project_path, all_targets_settings = thread.value
+          settings[project_path] = extractor.extract_per_target(all_targets_settings)
+        end
       end
 
       # @param [String] project_path
       # @param [String] target_name
+      #
+      # @return [Hash{String => String}] build settings for target or nil
       #
       def get_settings(project_path, target_name)
         return nil unless settings[project_path]

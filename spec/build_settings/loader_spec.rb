@@ -24,8 +24,7 @@ RSpec.describe XcodeArchiveCache::BuildSettings::Loader, "#load_build_settings" 
     "  PATH = some path\n"
     allow(@executor).to receive(:load_build_settings).with("second_project_path").and_return(second_project_settings)
 
-    @loader.load_settings("first_project_path")
-    @loader.load_settings("second_project_path")
+    @loader.load_settings(%w(first_project_path second_project_path))
 
     settings_container = XcodeArchiveCache::BuildSettings::Container.new({"TARGETNAME" => "first", "ARCHS" => "armv7", "PATH" => "some path"}, {"TARGETNAME" => "first", "ARCHS" => "armv7"})
     expect(@loader.get_settings("first_project_path", "first")).to eq(settings_container)
