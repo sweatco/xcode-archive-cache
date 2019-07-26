@@ -20,7 +20,6 @@ module XcodeArchiveCache
         native_target_finder.set_platform_name_filter(dependency_target.platform_name)
 
         graph = Graph.new(dependency_target.project)
-
         add_to_graph(dependency_target, graph, true)
         load_settings(graph, dependent_target)
         calculate_shas(graph)
@@ -29,6 +28,8 @@ module XcodeArchiveCache
       end
 
       private
+
+      ALL_NODES = []
 
       # @return [XcodeArchiveCache::BuildSettings::Loader]
       #
@@ -58,25 +59,21 @@ module XcodeArchiveCache
         end
 
         display_name = target.display_name
-        existing_node = graph.node_by_name(display_name)
-        if existing_node
-          debug("already added this one")
-          return existing_node
-        end
-
         if target_stack.include?(display_name)
           target_stack.push(display_name)
           raise Informative, "Circular dependency detected: #{target_stack.join(" -> ")}"
         end
 
-        node = graph.node_by_name(display_name)
+        node = ALL_NODES.select {|node| node.native_target.uuid == target.uuid && node.native_target.project == target.project}.first
         if node
           debug("already traversed this one")
+          graph.nodes.push(node) unless graph.nodes.include?(node)
           return node
         else
           debug("adding new node")
           node = Node.new(display_name, target, is_root)
           graph.nodes.push(node)
+          ALL_NODES.push(node)
         end
 
         dependencies = []

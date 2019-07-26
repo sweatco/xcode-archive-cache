@@ -10,9 +10,9 @@ module XcodeArchiveCache
       #
       attr_reader :is_root
 
-      # @return [Bool] should target be rebuilt
+      # @return [Symbol] should target be rebuilt
       #
-      attr_accessor :rebuild
+      attr_accessor :state
 
       # @return [String] sha256 of (input files + build settings + dependency shas)
       #
@@ -44,6 +44,7 @@ module XcodeArchiveCache
         @is_root = is_root
         @dependent = []
         @dependencies = []
+        @state = :unknown
       end
 
       def has_framework_product?
@@ -89,6 +90,12 @@ module XcodeArchiveCache
         (dependent + dependent.map(&:all_dependent_nodes)).flatten.uniq
       end
 
+      # @return [Bool]
+      #
+      def waiting_for_rebuild
+        state == :waiting_for_rebuild
+      end
+
       def ==(other_node)
         other_node && native_target.uuid == other_node.native_target.uuid && native_target.project == other_node.native_target.project
       end
@@ -97,7 +104,7 @@ module XcodeArchiveCache
         sha_string = sha ? sha : "<none>"
         dependent_names = dependent.length > 0 ? dependent.map(&:name).join(", ") : "<none>"
         dependency_names = dependencies.length > 0 ? dependencies.map(&:name).join(", ") : "<none>"
-        "#{name}\n\troot: #{is_root}\n\tproduct: #{product_file_name}\n\tsha: #{sha_string}\n\trebuild: #{rebuild}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
+        "#{name}\n\troot: #{is_root}\n\tproduct: #{product_file_name}\n\tsha: #{sha_string}\n\tstate: #{state}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
       end
     end
   end

@@ -20,7 +20,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
       def perform_internal_injection(graph)
-        inject_cached(graph.nodes)
+        inject_unpacked(graph.nodes)
         add_header_paths(graph.nodes)
         save_graph_projects(graph)
       end
@@ -91,8 +91,8 @@ module XcodeArchiveCache
 
       # @param [Array<XcodeArchiveCache::BuildGraph::Node>] nodes
       #
-      def inject_cached(nodes)
-        cached_nodes = nodes.select {|node| !node.rebuild}
+      def inject_unpacked(nodes)
+        cached_nodes = nodes.select {|node| node.state == :unpacked}
         cached_nodes.each do |node|
           headers_mover.prepare_headers_for_injection(node)
           add_as_prebuilt_to_dependents(node)
@@ -105,7 +105,7 @@ module XcodeArchiveCache
         header_storage_paths = storage.get_all_headers_storage_paths
 
         nodes
-            .select {|node| node.rebuild}
+            .select(&:waiting_for_rebuild)
             .each {|node| add_header_paths_to_target(node.native_target, header_storage_paths)}
       end
 
@@ -130,7 +130,7 @@ module XcodeArchiveCache
       def add_as_prebuilt_to_dependents(prebuilt_node)
         dependent_to_rebuild = prebuilt_node
                                    .all_dependent_nodes
-                                   .select {|node| node.rebuild}
+                                   .select(&:waiting_for_rebuild)
         dependent_to_rebuild.each do |dependent_node|
           should_link = prebuilt_node.dependent.include?(dependent_node)
           add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, should_link)

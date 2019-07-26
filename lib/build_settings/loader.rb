@@ -39,18 +39,17 @@ module XcodeArchiveCache
 
     class Loader
 
-      # @param [Xcodebuild::Executor.new] executor
+      # @param [Xcodebuild::Executor] executor
       #
       def initialize(executor)
         @executor = executor
         @extractor = Extractor.new
-        @settings = Hash.new
       end
 
       # @param [Array<String>] project_paths
       #
       def load_settings(project_paths)
-        paths_without_settings = project_paths.select {|path| settings[path] == nil}
+        paths_without_settings = project_paths.select {|path| get_project_settings(path) == nil}
 
         threads = paths_without_settings.map do |path|
           Thread.new(path) do |project_path|
@@ -61,7 +60,8 @@ module XcodeArchiveCache
 
         threads.each do |thread|
           project_path, all_targets_settings = thread.value
-          settings[project_path] = extractor.extract_per_target(all_targets_settings)
+          per_target_settings = extractor.extract_per_target(all_targets_settings)
+          set_project_settings(project_path, per_target_settings)
         end
       end
 
@@ -71,12 +71,15 @@ module XcodeArchiveCache
       # @return [Hash{String => String}] build settings for target or nil
       #
       def get_settings(project_path, target_name)
-        return nil unless settings[project_path]
+        project_settings = get_project_settings(project_path)
+        return nil unless project_settings
 
-        settings[project_path][target_name]
+        project_settings[target_name]
       end
 
       private
+
+      SETTINGS = Hash.new
 
       # @return [XcodeArchiveCache::Xcodebuild::Executor]
       #
@@ -86,9 +89,28 @@ module XcodeArchiveCache
       #
       attr_reader :extractor
 
-      # @return [Hash{String => Hash}]
+      # @param [String] path
       #
-      attr_reader :settings
+      # @return [Hash]
+      #
+      def get_project_settings(path)
+        SETTINGS[get_project_key(path)]
+      end
+
+      # @param [String] path
+      # @param [Hash] per_target_settings
+      #
+      def set_project_settings(path, per_target_settings)
+        SETTINGS[get_project_key(path)] = per_target_settings
+      end
+
+      # @param [String] project_path
+      #
+      # @return [String]
+      #
+      def get_project_key(project_path)
+        "#{project_path}-#{executor.arguments_state}"
+      end
     end
   end
 end
