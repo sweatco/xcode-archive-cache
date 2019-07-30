@@ -29,6 +29,10 @@ module XcodeArchiveCache
         nodes.select {|node| node.name == name}.first
       end
 
+      def add_multiple_nodes(new_nodes)
+        @nodes += new_nodes
+      end
+
       # @return [XcodeArchiveCache::BuildGraph::Node]
       #
       def root_node

@@ -90,6 +90,12 @@ module XcodeArchiveCache
         (dependent + dependent.map(&:all_dependent_nodes)).flatten.uniq
       end
 
+      # @return [Array<Node>]
+      #
+      def subgraph
+        ([self] + dependencies + dependencies.map(&:subgraph)).flatten.uniq
+      end
+
       # @return [Bool]
       #
       def waiting_for_rebuild
