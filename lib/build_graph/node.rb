@@ -55,6 +55,14 @@ module XcodeArchiveCache
         native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
       end
 
+      def has_bundle_product?
+        native_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:bundle]
+      end
+
+      def has_acceptable_product?
+        ACCEPTABLE_PRODUCT_TYPES.include?(native_target.product_type)
+      end
+
       # @return [String]
       #
       def product_file_name
@@ -112,6 +120,12 @@ module XcodeArchiveCache
         dependency_names = dependencies.length > 0 ? dependencies.map(&:name).join(", ") : "<none>"
         "#{name}\n\troot: #{is_root}\n\tproduct: #{product_file_name}\n\tsha: #{sha_string}\n\tstate: #{state}\n\tdependent: #{dependent_names}\n\tdependencies: #{dependency_names}"
       end
+
+      private
+
+      ACCEPTABLE_PRODUCT_TYPES = [Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework],
+                                  Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library],
+                                  Xcodeproj::Constants::PRODUCT_TYPE_UTI[:bundle]].freeze
     end
   end
 end

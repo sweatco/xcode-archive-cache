@@ -131,7 +131,7 @@ module XcodeArchiveCache
       graph.nodes
           .select(&:waiting_for_rebuild)
           .each do |node|
-        file_paths = @product_extractor.list_product_contents(root_target.name, node)
+        file_paths = @product_extractor.list_product_contents(node)
         @injection_storage.store_products(node, file_paths)
         @cache_storage.store(node, @injection_storage.get_storage_path(node))
         node.state = :rebuilt_and_cached

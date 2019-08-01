@@ -49,6 +49,7 @@ module XcodeArchiveCache
         #
         if graph.node_by_name(get_pods_target_name(target))
           pods_fixer.fix_embed_frameworks_script(target, graph, storage.container_dir_path)
+          pods_fixer.fix_copy_resources_script(target, graph, storage.container_dir_path)
         else
           framework_nodes = graph.nodes.select {|node| node.has_framework_product?}
           framework_file_paths = framework_nodes.map {|node| File.join(storage.get_storage_path(node), node.product_file_name)}
@@ -113,9 +114,9 @@ module XcodeArchiveCache
       # @param [Array<String>] paths
       #
       def add_header_paths_to_target(target, paths)
-        debug("adding #{paths} to #{target.display_name}")
-
         return if paths == nil
+
+        debug("adding #{paths} to #{target.display_name}")
 
         build_configuration = find_build_configuration(target)
         paths.each do |path|
@@ -153,12 +154,14 @@ module XcodeArchiveCache
       def add_as_prebuilt_dependency(prebuilt_node, dependent_target, should_link)
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
+        unless prebuilt_node.has_acceptable_product?
+          raise Informative, "#{prebuilt_node.name} has unsupported product type: #{prebuilt_node.native_target.product_type}"
+        end
+
         if prebuilt_node.has_framework_product?
           add_as_prebuilt_framework(prebuilt_node, dependent_target)
         elsif prebuilt_node.has_static_library_product?
           add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
-        else
-          raise ArgumentError.new, "#{prebuilt_node.name} has unsupported product type: #{prebuilt_node.native_target.product_type}"
         end
 
         debug("done with #{prebuilt_node.name} for #{dependent_target.display_name}")
@@ -197,7 +200,7 @@ module XcodeArchiveCache
       def find_build_configuration(target)
         build_configuration = target.build_configurations.select {|configuration| configuration.name == configuration_name}.first
         unless build_configuration
-          raise ArgumentError.new, "#{configuration_name} build configuration not found on target #{node.name}"
+          raise Informative, "#{configuration_name} build configuration not found on target #{node.name}"
         end
 
         build_configuration
