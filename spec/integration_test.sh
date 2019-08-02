@@ -58,10 +58,14 @@ test_target() {
   check_for_positive_result "Test $1"
 }
 
-perform_app_test() {
-  install_pods
+build_and_test_app() {
   inject_cache
   test_target "Test"
+}
+
+perform_app_test() {
+  install_pods
+  build_and_test_app
 }
 
 perform_both_apps_test() {
@@ -78,26 +82,26 @@ perform_static_dependency_test() {
   cd -
 }
 
-expect_frameworks_to_be_rebuilt() {
-  FRAMEWORKS=$(make_filename_list_enumerable "$1")
-  for FRAMEWORK_NAME in $FRAMEWORKS; do
-    grep -q "Touching $FRAMEWORK_NAME" $2
-    check_for_positive_result "Rebuild check for $FRAMEWORK_NAME"
+expect_bundles_to_be_rebuilt() {
+  BUNDLES=$(make_filename_list_enumerable "$1")
+  for BUNDLE_NAME in $BUNDLES; do
+    grep -q "Touching $BUNDLE_NAME" $2
+    check_for_positive_result "Rebuild check for $BUNDLE_NAME"
   done
 
-  NUMBER_OF_REBUILT_FRAMEWORKS=$(grep "Touching" $2 | wc -l | xargs)
-  NUMBER_OF_FRAMEWORKS_EXPECTED_TO_BE_REBUILT=$(echo "$FRAMEWORKS" | wc -w | xargs)
-  if [ $NUMBER_OF_REBUILT_FRAMEWORKS != $NUMBER_OF_FRAMEWORKS_EXPECTED_TO_BE_REBUILT ]; then
-    echo "Number of rebuilt frameworks is wrong"
+  NUMBER_OF_REBUILT_BUNDLES=$(grep "Touching" $2 | wc -l | xargs)
+  NUMBER_OF_BUNDLES_EXPECTED_TO_BE_REBUILT=$(echo "$BUNDLES" | wc -w | xargs)
+  if [ $NUMBER_OF_REBUILT_BUNDLES != $NUMBER_OF_BUNDLES_EXPECTED_TO_BE_REBUILT ]; then
+    echo "Number of rebuilt bundles is wrong"
     exit 1
   fi
 }
 
-expect_frameworks_not_to_be_rebuilt() {
-  FRAMEWORKS=$(make_filename_list_enumerable "$1")
-  for FRAMEWORK_NAME in $FRAMEWORKS; do
-    grep -q "Touching $FRAMEWORK_NAME" $2
-    check_for_negative_result "No-extra-rebuild check for $FRAMEWORK_NAME"
+expect_bundles_not_to_be_rebuilt() {
+  BUNDLES=$(make_filename_list_enumerable "$1")
+  for BUNDLE_NAME in $BUNDLES; do
+    grep -q "Touching $BUNDLE_NAME" $2
+    check_for_negative_result "No-extra-rebuild check for $BUNDLE_NAME"
   done
 }
 
@@ -144,14 +148,20 @@ update_framework_dependency_string_and_test() {
   sed -i.bak "$REPLACE_EXPRESSION" TestUITests/TestUITests.swift
 }
 
+update_bundled_json_and_test() {
+  REPLACE_EXPRESSION="s+cimb+some_random_string+g"
+  sed -i.bak "$REPLACE_EXPRESSION" Pods/MidtransKit/MidtransKit/MidtransKit/resources/bin.json
+  sed -i.bak "$REPLACE_EXPRESSION" Test/ViewController.swift
+}
+
 cd $TEST_PROJECT_LOCATION
 check_for_positive_result "Go to test project dir"
 
-ALL_FRAMEWORKS="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework"
+ALL_BUNDLES="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework|MidtransKit.bundle|MidtransCoreKit.framework|MidtransKit.framework"
 ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a|libLibraryThatUsesSibling.a"
 perform_full_clean && perform_app_test
-expect_frameworks_to_be_rebuilt $ALL_FRAMEWORKS $CACHE_LOG_FILE
-expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_bundles_to_be_rebuilt $ALL_BUNDLES $CACHE_LOG_FILE
+expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt $ALL_LIBS $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
@@ -159,8 +169,8 @@ expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 # all dependencies are shared so only umbrella Pods framework should be rebuilt
 #
 clean_but_leave_build_cache && add_second_app_to_cachefile && perform_both_apps_test
-expect_frameworks_to_be_rebuilt "Pods_Test2.framework" $CACHE_LOG_FILE
-expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_bundles_to_be_rebuilt "Pods_Test2.framework" $CACHE_LOG_FILE
+expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
@@ -168,8 +178,8 @@ expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 #
 LIBS_EXPECTED_TO_BE_REBUILT="libLibraryThatUsesSibling.a|libStaticDependency.a"
 clean_but_leave_build_cache && add_sibling_import && perform_app_test
-expect_frameworks_to_be_rebuilt "" $CACHE_LOG_FILE
-expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_bundles_to_be_rebuilt "" $CACHE_LOG_FILE
+expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt $LIBS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
@@ -177,10 +187,10 @@ expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 #
 clean_but_leave_build_cache && update_single_pod
 
-FRAMEWORKS_EXPECTED_TO_BE_REBUILT="SDCAlertView.framework|Pods_Test.framework"
+BUNDLES_EXPECTED_TO_BE_REBUILT="SDCAlertView.framework|Pods_Test.framework"
 perform_app_test
-expect_frameworks_to_be_rebuilt $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
-expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_bundles_to_be_rebuilt $BUNDLES_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
+expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
@@ -188,17 +198,27 @@ expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 #
 clean_but_leave_build_cache && update_framework_dependency_string_and_test
 
-FRAMEWORKS_EXPECTED_TO_BE_REBUILT="FrameworkDependency.framework"
+BUNDLES_EXPECTED_TO_BE_REBUILT="FrameworkDependency.framework"
 LIBS_EXPECTED_TO_BE_REBUILT="libLibraryWithFrameworkDependency.a|libStaticDependency.a"
 perform_app_test
-expect_frameworks_to_be_rebuilt $FRAMEWORKS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
-expect_frameworks_not_to_be_rebuilt $ALL_FRAMEWORKS $XCODEBUILD_LOG_FILE
+expect_bundles_to_be_rebuilt $BUNDLES_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
+expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
 expect_libs_to_be_rebuilt $LIBS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
+expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
+
+# update bundle content, expecting changes to propagate to the app
+#
+clean_but_leave_build_cache && install_pods && update_bundled_json_and_test
+BUNDLES_EXPECTED_TO_BE_REBUILT="MidtransKit.bundle|MidtransKit.framework|Pods_Test.framework"
+build_and_test_app
+expect_bundles_to_be_rebuilt $BUNDLES_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
+expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
+expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
 expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE
 
 # ask for StaticDependency rebuild, expecting nothing to be rebuilt
 #
 clean_but_leave_build_cache
 perform_static_dependency_test
-expect_frameworks_to_be_rebuilt "" $CACHE_LOG_FILE
+expect_bundles_to_be_rebuilt "" $CACHE_LOG_FILE
 expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
