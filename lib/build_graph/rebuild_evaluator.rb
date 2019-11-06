@@ -11,13 +11,17 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def evaluate(node)
-        return if node.rebuild != nil
+        return if node.state != :unknown
 
         # we include dependency shas in every node sha calculation,
         # so if some dependency changes, that change propagates
         # all the way to the top level
         #
-        node.rebuild = cache_storage.cached_artifact_path(node) == nil
+        if cache_storage.cached_artifact_path(node) == nil
+          node.state = :waiting_for_rebuild
+        else
+          node.state = :exists_in_cache
+        end
       end
 
       private

@@ -4,6 +4,11 @@ module XcodeArchiveCache
     GENERIC_DESTINATION = "generic"
 
     class Executor
+
+      # @return [String]
+      #
+      attr_reader :arguments_state
+
       # @param [String] configuration
       # @param [String] platform
       # @param [String] destination
@@ -17,6 +22,7 @@ module XcodeArchiveCache
         @action = action
         @args = args
         @shell_executor = XcodeArchiveCache::Shell::Executor.new
+        @arguments_state = "#{configuration}-#{platform}-#{destination}-#{action}-#{args}"
       end
 
       # @param [String] project_path

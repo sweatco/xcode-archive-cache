@@ -11,14 +11,16 @@ module XcodeArchiveCache
         @derived_data_path = derived_data_path
       end
 
-      # @param [String] configuration
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
       def rebuild_missing(target, graph)
         should_rebuild_anything = should_rebuild?(graph)
         if should_rebuild_anything
-          rebuild_list = graph.nodes.select(&:rebuild).map(&:name).join(", ")
+          rebuild_list = graph.nodes
+                             .select(&:waiting_for_rebuild)
+                             .map(&:name)
+                             .join(", ")
           info("going to rebuild:\n#{rebuild_list}")
 
           build_result = xcodebuild_executor.build(target.project.path, target.name, derived_data_path)
@@ -33,7 +35,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
       def should_rebuild?(graph)
-        graph.nodes.reduce(false) {|rebuild, node| rebuild || node.rebuild}
+        graph.nodes.reduce(false) {|rebuild, node| rebuild || node.waiting_for_rebuild}
       end
 
       private
@@ -42,6 +44,8 @@ module XcodeArchiveCache
       #
       attr_reader :derived_data_path
 
+      # @return [XcodeArchiveCache::Xcodebuild::Executor]
+      #
       attr_reader :xcodebuild_executor
     end
   end

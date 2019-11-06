@@ -93,7 +93,7 @@ module XcodeArchiveCache
       graph = graph_builder.build_graph(target, dependency_target)
 
       evaluate_for_rebuild(graph)
-      extract_cached_artifacts(graph)
+      unpack_cached_artifacts(graph)
       rebuild_if_needed(xcodebuild_executor, dependency_target, graph)
       @injector.perform_outgoing_injection(graph, target)
     end
@@ -108,12 +108,13 @@ module XcodeArchiveCache
 
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
-    def extract_cached_artifacts(graph)
-      graph.nodes.each do |node|
-        next if node.rebuild
-
+    def unpack_cached_artifacts(graph)
+      graph.nodes
+          .select {|node| node.state == :exists_in_cache}
+          .each do |node|
         destination = @injection_storage.prepare_storage(node)
         @artifact_extractor.unpack(node, destination)
+        node.state = :unpacked
       end
     end
 
@@ -127,12 +128,13 @@ module XcodeArchiveCache
       @injector.perform_internal_injection(graph)
       rebuild_performer.rebuild_missing(root_target, graph)
 
-      graph.nodes.each do |node|
-        next unless node.rebuild
-
+      graph.nodes
+          .select(&:waiting_for_rebuild)
+          .each do |node|
         file_paths = @product_extractor.list_product_contents(root_target.name, node)
         @injection_storage.store_products(node, file_paths)
         @cache_storage.store(node, @injection_storage.get_storage_path(node))
+        node.state = :rebuilt_and_cached
       end
     end
   end

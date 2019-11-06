@@ -46,6 +46,8 @@ module XcodeArchiveCache
                        .strip
           end
         end
+
+        nil
       end
     end
   end

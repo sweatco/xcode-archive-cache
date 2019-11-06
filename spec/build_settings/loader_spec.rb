@@ -23,6 +23,7 @@ RSpec.describe XcodeArchiveCache::BuildSettings::Loader, "#load_build_settings" 
     "  ARCHS = arm64\n" \
     "  PATH = some path\n"
     allow(@executor).to receive(:load_build_settings).with("second_project_path").and_return(second_project_settings)
+    allow(@executor).to receive_messages(:arguments_state => "arguments_state")
 
     @loader.load_settings(%w(first_project_path second_project_path))
 
