@@ -22,8 +22,8 @@ check_for_negative_result() {
 
 ROOT_PWD=$PWD
 TEST_PROJECT_LOCATION="$PWD/fixtures/test_project/Test"
-IOS_DESTINATION="platform=iOS Simulator,name=iPhone 7,OS=latest"
-WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 4 - 40mm,OS=latest"
+IOS_DESTINATION="platform=iOS Simulator,name=iPhone 11,OS=latest"
+WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 5 - 44mm,OS=latest"
 TEST_DESTINATION="${IOS_DESTINATION}|${WATCH_DESTINATION}"
 
 CACHE_LOG_FILE="$TEST_PROJECT_LOCATION/cache.log"
