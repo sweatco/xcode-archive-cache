@@ -104,6 +104,7 @@ module XcodeArchiveCache
       #
       def add_header_paths(nodes)
         header_storage_paths = storage.get_all_headers_storage_paths
+        return if header_storage_paths.length == 0
 
         nodes
             .select(&:waiting_for_rebuild)
