@@ -5,13 +5,21 @@ module XcodeArchiveCache
       # @param [Array<Xcodeproj::Project>] projects
       #
       def initialize(projects)
-        @all_targets = projects
-                           .map {|project| unnest(project)}
-                           .flatten
-                           .uniq
-                           .map(&:native_targets)
-                           .flatten
-                           .select {|target| !target.test_target_type? }
+        @all_targets = extract_targets(projects)
+      end
+
+      # @param [Array<Xcodeproj::Project>] projects
+      #
+      # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]
+      #
+      def extract_targets(projects)
+        projects
+            .map {|project| unnest(project)}
+            .flatten
+            .uniq
+            .map(&:native_targets)
+            .flatten
+            .select {|target| !target.test_target_type?}
       end
 
       # @param [String] platform_name
@@ -36,9 +44,26 @@ module XcodeArchiveCache
       #
       def find_for_file(file)
         if file.file_ref.is_a?(Xcodeproj::Project::Object::PBXReferenceProxy)
-          project = file.file_ref.remote_ref.container_portal_object
           product_reference_uuid = file.file_ref.remote_ref.remote_global_id_string
-          find_with_product_ref_uuid(project, product_reference_uuid)
+          target = find_with_product_ref_uuid(product_reference_uuid)
+          if target == nil
+            project = file.file_ref.remote_ref.container_portal_object
+            target = find_in_project(project, product_reference_uuid)
+
+            # allow all targets from this project
+            # to be linked to that exact project
+            #
+            # otherwise, injection will operate on different Xcodeproj::Project objects
+            # resulting to only the last target being actually removed
+            #
+            @all_targets += extract_targets([project])
+          end
+
+          if target == nil
+            raise Informative, "Target for #{file.file_ref.path} not found"
+          end
+
+          target
         elsif file.file_ref.is_a?(Xcodeproj::Project::Object::PBXFileReference)
           # products of sibling project targets are added as PBXFileReferences
           targets = find_with_product_path(file.file_ref.path)
@@ -54,7 +79,7 @@ module XcodeArchiveCache
       #
       def find_for_product_name(product_name)
         all_targets.select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
-                    .first
+            .first
       end
 
       private
@@ -85,7 +110,16 @@ module XcodeArchiveCache
       #
       # @return [Xcodeproj::Project::Object::PBXNativeTarget]
       #
-      def find_with_product_ref_uuid(project, uuid)
+      def find_with_product_ref_uuid(uuid)
+        all_targets.select {|target| target.product_reference.uuid == uuid}.first
+      end
+
+      # @param [Xcodeproj::Project] project
+      # @param [String] uuid
+      #
+      # @return [Xcodeproj::Project::Object::PBXNativeTarget]
+      #
+      def find_in_project(project, uuid)
         project.native_targets.select {|target| target.product_reference.uuid == uuid}.first
       end
 
