@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4435C870241A906300F924C1 /* LibraryThatUsesSibling.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4467F92E22C677B5003DBC92 /* LibraryThatUsesSibling.h */; };
 		4435C875241A907D00F924C1 /* AnotherStaticDependency.m in Sources */ = {isa = PBXBuildFile; fileRef = 4435C868241A905500F924C1 /* AnotherStaticDependency.m */; };
 		4467F93022C677B5003DBC92 /* LibraryThatUsesSibling.m in Sources */ = {isa = PBXBuildFile; fileRef = 4467F92F22C677B5003DBC92 /* LibraryThatUsesSibling.m */; };
 		4467F93122C677B5003DBC92 /* LibraryThatUsesSibling.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4467F92E22C677B5003DBC92 /* LibraryThatUsesSibling.h */; };
@@ -20,7 +19,6 @@
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				4435C870241A906300F924C1 /* LibraryThatUsesSibling.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
