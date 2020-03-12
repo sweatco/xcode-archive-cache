@@ -7,11 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4435C875241A907D00F924C1 /* AnotherStaticDependency.m in Sources */ = {isa = PBXBuildFile; fileRef = 4435C868241A905500F924C1 /* AnotherStaticDependency.m */; };
 		4467F93022C677B5003DBC92 /* LibraryThatUsesSibling.m in Sources */ = {isa = PBXBuildFile; fileRef = 4467F92F22C677B5003DBC92 /* LibraryThatUsesSibling.m */; };
 		4467F93122C677B5003DBC92 /* LibraryThatUsesSibling.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4467F92E22C677B5003DBC92 /* LibraryThatUsesSibling.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		4435C86F241A906300F924C1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4467F92922C677B5003DBC92 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -25,12 +35,22 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4435C868241A905500F924C1 /* AnotherStaticDependency.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AnotherStaticDependency.m; sourceTree = "<group>"; };
+		4435C869241A905500F924C1 /* AnotherStaticDependency.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AnotherStaticDependency.h; sourceTree = "<group>"; };
+		4435C874241A906300F924C1 /* libAnotherStaticDependency.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAnotherStaticDependency.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4467F92B22C677B5003DBC92 /* libLibraryThatUsesSibling.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libLibraryThatUsesSibling.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4467F92E22C677B5003DBC92 /* LibraryThatUsesSibling.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LibraryThatUsesSibling.h; sourceTree = "<group>"; };
 		4467F92F22C677B5003DBC92 /* LibraryThatUsesSibling.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LibraryThatUsesSibling.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4435C86E241A906300F924C1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4467F92822C677B5003DBC92 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -41,9 +61,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4435C867241A905500F924C1 /* AnotherStaticDependency */ = {
+			isa = PBXGroup;
+			children = (
+				4435C868241A905500F924C1 /* AnotherStaticDependency.m */,
+				4435C869241A905500F924C1 /* AnotherStaticDependency.h */,
+			);
+			path = AnotherStaticDependency;
+			sourceTree = "<group>";
+		};
 		4467F92222C677B5003DBC92 = {
 			isa = PBXGroup;
 			children = (
+				4435C867241A905500F924C1 /* AnotherStaticDependency */,
 				4467F92D22C677B5003DBC92 /* LibraryThatUsesSibling */,
 				4467F92C22C677B5003DBC92 /* Products */,
 			);
@@ -53,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				4467F92B22C677B5003DBC92 /* libLibraryThatUsesSibling.a */,
+				4435C874241A906300F924C1 /* libAnotherStaticDependency.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -69,6 +100,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4435C86B241A906300F924C1 /* AnotherStaticDependency */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4435C871241A906300F924C1 /* Build configuration list for PBXNativeTarget "AnotherStaticDependency" */;
+			buildPhases = (
+				4435C86C241A906300F924C1 /* Sources */,
+				4435C86E241A906300F924C1 /* Frameworks */,
+				4435C86F241A906300F924C1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AnotherStaticDependency;
+			productName = LibraryThatUsesSibling;
+			productReference = 4435C874241A906300F924C1 /* libAnotherStaticDependency.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		4467F92A22C677B5003DBC92 /* LibraryThatUsesSibling */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4467F93422C677B5003DBC92 /* Build configuration list for PBXNativeTarget "LibraryThatUsesSibling" */;
@@ -100,7 +148,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 4467F92622C677B5003DBC92 /* Build configuration list for PBXProject "LibraryThatUsesSibling" */;
+			buildConfigurationList = 4467F92622C677B5003DBC92 /* Build configuration list for PBXProject "MultipleStaticLibraries" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -113,11 +161,20 @@
 			projectRoot = "";
 			targets = (
 				4467F92A22C677B5003DBC92 /* LibraryThatUsesSibling */,
+				4435C86B241A906300F924C1 /* AnotherStaticDependency */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4435C86C241A906300F924C1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4435C875241A907D00F924C1 /* AnotherStaticDependency.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4467F92722C677B5003DBC92 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -129,6 +186,28 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		4435C872241A906300F924C1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4435C873241A906300F924C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		4467F93222C677B5003DBC92 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -266,7 +345,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4467F92622C677B5003DBC92 /* Build configuration list for PBXProject "LibraryThatUsesSibling" */ = {
+		4435C871241A906300F924C1 /* Build configuration list for PBXNativeTarget "AnotherStaticDependency" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4435C872241A906300F924C1 /* Debug */,
+				4435C873241A906300F924C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4467F92622C677B5003DBC92 /* Build configuration list for PBXProject "MultipleStaticLibraries" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4467F93222C677B5003DBC92 /* Debug */,

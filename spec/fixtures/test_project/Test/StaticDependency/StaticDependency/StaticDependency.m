@@ -8,6 +8,7 @@
 
 #import "StaticDependency.h"
 #import "LibraryWithFrameworkDependency.h"
+#import "AnotherStaticDependency.h"
 
 @implementation StaticDependency
 
@@ -16,6 +17,10 @@
     return [NSString stringWithFormat:@"%@ AND %@",
             [library somethingThatIsDefinedInThisLibrary],
             [library somethingThatComesFromFramework]];
+}
+
+-(NSString *) anotherStaticDependencyDesciption {
+    return [[[AnotherStaticDependency alloc] init] ownDescription];
 }
 
 -(NSString *) ownDescription {

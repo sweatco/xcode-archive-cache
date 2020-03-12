@@ -62,35 +62,49 @@ RSpec.describe XcodeArchiveCache::BuildGraph::NativeTargetFinder, "#find" do
 
     describe "on reference proxy" do
       before :each do
-        @file = double("file")
+        allow(@first_product_ref).to receive(:uuid).and_return("first_uuid")
+        allow(@second_product_ref).to receive(:uuid).and_return("second_uuid")
 
-        @file_ref = double("file_ref")
-        allow(@file_ref).to receive(:is_a?) {|klass| klass == Xcodeproj::Project::Object::PBXReferenceProxy}
-        allow(@file).to receive(:file_ref).and_return(@file_ref)
+        allow(@project).to receive(:native_targets).and_return([@first_native_target])
 
         @remote_ref = double("remote_ref")
         allow(@remote_ref).to receive(:remote_global_id_string).and_return("product_uuid")
+
+        @file_ref = double("file_ref")
+        allow(@file_ref).to receive(:is_a?) {|klass| klass == Xcodeproj::Project::Object::PBXReferenceProxy}
         allow(@file_ref).to receive(:remote_ref).and_return(@remote_ref)
-      end
 
-      it "should correctly find target in nested project" do
-        allow(@project).to receive(:native_targets).and_return([@first_native_target])
+        @file = double("file")
+        allow(@file).to receive(:file_ref).and_return(@file_ref)
 
-        nested_project_ref = double("nested_project_ref")
-        allow(nested_project_ref).to receive(:path).and_return("nested.xcodeproj")
-        allow(nested_project_ref).to receive(:real_path).and_return("nested.xcodeproj")
-        allow(@project).to receive(:files).and_return([nested_project_ref])
+        @nested_project_ref = double("nested_project_ref")
+        allow(@nested_project_ref).to receive(:path).and_return("nested.xcodeproj")
+        allow(@nested_project_ref).to receive(:real_path).and_return("nested.xcodeproj")
 
-        nested_project = double("nested_project")
+        @nested_project = double("nested_project")
         product_reference = double("product_reference")
         allow(product_reference).to receive(:uuid).and_return("product_uuid")
         allow(@second_native_target).to receive(:product_reference).and_return(product_reference)
-        allow(nested_project).to receive(:native_targets).and_return([@second_native_target])
-        allow(nested_project).to receive(:files).and_return([])
-        allow(@remote_ref).to receive(:container_portal_object).and_return(nested_project)
+
+        allow(@nested_project).to receive(:files).and_return([])
+        allow(@nested_project).to receive(:native_targets).and_return([@second_native_target])
+      end
+
+      it "should correctly find target if it exists in known projects" do
+        allow(@project).to receive(:files).and_return([@nested_project_ref])
 
         allow(File).to(receive(:exist?)) {|file_path| file_path == "nested.xcodeproj"}
-        allow(Xcodeproj::Project).to receive(:open) {|file_path| file_path == "nested.xcodeproj" ? nested_project : nil}
+        allow(Xcodeproj::Project).to receive(:open) {|file_path| file_path == "nested.xcodeproj" ? @nested_project : nil}
+
+        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project])
+        finder.set_platform_name_filter("platform")
+
+        expect(finder.find_for_file(@file)).to eq(@second_native_target)
+      end
+
+      it "should correctly find target in nested project" do
+        allow(@project).to receive(:files).and_return([])
+        allow(@remote_ref).to receive(:container_portal_object).and_return(@nested_project)
 
         finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project])
         finder.set_platform_name_filter("platform")

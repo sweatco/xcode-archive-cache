@@ -13,6 +13,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface StaticDependency : NSObject
 
 -(NSString *) libraryWithFrameworkDependencyDescription;
+-(NSString *) anotherStaticDependencyDesciption;
 -(NSString *) ownDescription;
 
 @end
