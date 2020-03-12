@@ -133,7 +133,7 @@ add_second_app_to_cachefile() {
 }
 
 add_sibling_import() {
-  sed -i.bak "s+// to be removed during tests: ++g" StaticDependency/Libraries/LibraryThatUsesSibling/LibraryThatUsesSibling/LibraryThatUsesSibling.h
+  sed -i.bak "s+// to be removed during tests: ++g" StaticDependency/Libraries/MultipleStaticLibraries/LibraryThatUsesSibling/LibraryThatUsesSibling.h
   check_for_positive_result "Add sibling import"
 }
 
@@ -154,11 +154,17 @@ update_bundled_json_and_test() {
   sed -i.bak "$REPLACE_EXPRESSION" Test/ViewController.swift
 }
 
+update_another_static_library_string_and_test() {
+  REPLACE_EXPRESSION="s+I'm just another static library+XcodeArchiveCache updated me+g"
+  sed -i.bak "$REPLACE_EXPRESSION" StaticDependency/Libraries/MultipleStaticLibraries/AnotherStaticDependency/AnotherStaticDependency.m
+  sed -i.bak "$REPLACE_EXPRESSION" TestUITests/TestUITests.swift
+}
+
 cd $TEST_PROJECT_LOCATION
 check_for_positive_result "Go to test project dir"
 
 ALL_BUNDLES="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework|MidtransKit.bundle|MidtransCoreKit.framework|MidtransKit.framework"
-ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a|libLibraryThatUsesSibling.a"
+ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a|libLibraryThatUsesSibling.a|libAnotherStaticDependency.a"
 perform_full_clean && perform_app_test
 expect_bundles_to_be_rebuilt $ALL_BUNDLES $CACHE_LOG_FILE
 expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
@@ -222,3 +228,14 @@ clean_but_leave_build_cache
 perform_static_dependency_test
 expect_bundles_to_be_rebuilt "" $CACHE_LOG_FILE
 expect_libs_to_be_rebuilt "" $CACHE_LOG_FILE
+
+# update another static library code, expecting changes to propagate to the app
+#
+clean_but_leave_build_cache && install_pods && update_another_static_library_string_and_test
+
+LIBS_EXPECTED_TO_BE_REBUILT="libStaticDependency.a|libAnotherStaticDependency.a"
+build_and_test_app
+expect_bundles_to_be_rebuilt "" $CACHE_LOG_FILE
+expect_bundles_not_to_be_rebuilt $ALL_BUNDLES $XCODEBUILD_LOG_FILE
+expect_libs_to_be_rebuilt $LIBS_EXPECTED_TO_BE_REBUILT $CACHE_LOG_FILE
+expect_libs_not_to_be_rebuilt $ALL_LIBS $XCODEBUILD_LOG_FILE

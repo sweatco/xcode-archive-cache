@@ -11,11 +11,15 @@ import SDCAlertView
 
 class ViewController: UIViewController {
     @IBOutlet weak var frameworkLabel: UILabel!
+    @IBOutlet weak var anotherStaticDependencyLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        frameworkLabel.text = StaticDependency().libraryWithFrameworkDependencyDescription()
+        let dependency = StaticDependency()
+        frameworkLabel.text = dependency.libraryWithFrameworkDependencyDescription()
+        anotherStaticDependencyLabel.text = dependency.anotherStaticDependencyDesciption()
+        
         checkMidtransBundleContents()
     }
     
