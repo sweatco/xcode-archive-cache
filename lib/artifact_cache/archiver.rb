@@ -9,7 +9,8 @@ module XcodeArchiveCache
       #
       def archive(path, destination)
         if File.exists?(destination)
-          raise ArgumentError.new, "Artifact cache path #{destination} is already taken"
+          warn "Replacing artifact archive at path #{destination}"
+          FileUtils.rm_rf(destination)
         end
 
         if File.file?(path)

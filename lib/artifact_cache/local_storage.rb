@@ -60,7 +60,8 @@ module XcodeArchiveCache
         state_file_path = archive_path + ".state"
 
         if File.exist?(state_file_path)
-          raise ArgumentError.new, "State file already exists: #{state_file_path}"
+          warn "Replacing state file #{state_file_path}"
+          FileUtils.rm_f(state_file_path)
         end
 
         dependency_shas = node.dependencies
