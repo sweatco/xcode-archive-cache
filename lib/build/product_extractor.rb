@@ -78,7 +78,15 @@ module XcodeArchiveCache
           raise Informative, "Product of type #{built_node.native_target.product_type} not found for #{built_node.name}"
         end
 
-        [product_path]
+        paths = [product_path]
+
+        # this one is generated during Swift compilation
+        # so we need to cache it as well
+        #
+        swift_objc_interface_header_path = built_node.swift_objc_interface_header_path
+        paths << swift_objc_interface_header_path if swift_objc_interface_header_path
+
+        paths
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] built_node
