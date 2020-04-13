@@ -58,9 +58,11 @@ module XcodeArchiveCache
           end
         end
 
+        should_fix_settings = executor.set_up_for_simulator?
+
         threads.each do |thread|
           project_path, all_targets_settings = thread.value
-          per_target_settings = extractor.extract_per_target(all_targets_settings)
+          per_target_settings = extractor.extract_per_target(all_targets_settings, should_fix_settings)
           set_project_settings(project_path, per_target_settings)
         end
       end
