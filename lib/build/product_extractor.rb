@@ -17,7 +17,7 @@ module XcodeArchiveCache
       #
       def list_product_contents(built_node)
         file_paths = list_products(built_node)
-        file_paths.select {|path| File.exist?(path)}.map {|path| File.realpath(path)}
+        file_paths.select { |path| File.exist?(path) }.map { |path| File.realpath(path) }
       end
 
       private
@@ -114,7 +114,7 @@ module XcodeArchiveCache
         end
 
         uuids = list_bc_symbolmap_uuids(executable_path)
-        uuids.map {|uuid| find_bc_symbolmap(uuid)}.flatten
+        uuids.map { |uuid| find_bc_symbolmap(uuid) }.flatten
       end
 
       # @param [String] executable_path
