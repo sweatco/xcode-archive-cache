@@ -45,7 +45,7 @@ module XcodeArchiveCache
 
       # @param [String] characters
       #
-      # @return [String]
+      # @return [Regexp]
       #
       def create_entry_regex(characters = SETTING_NAME_CHARACTERS)
         Regexp.new("\\$[({]#{characters}[)}]")
