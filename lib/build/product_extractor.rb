@@ -114,7 +114,11 @@ module XcodeArchiveCache
       # @return [Array<String>]
       #
       def list_bc_symbolmap_uuids(executable_path)
-        shell_executor.execute_for_output("otool -l #{executable_path} | grep uuid | awk {'print $2'}").split("\n")
+        begin
+          shell_executor.execute_for_output("otool -l #{executable_path} | grep uuid | awk {'print $2'}").split("\n")
+        rescue
+          []
+        end
       end
 
       # @param [String] uuid
