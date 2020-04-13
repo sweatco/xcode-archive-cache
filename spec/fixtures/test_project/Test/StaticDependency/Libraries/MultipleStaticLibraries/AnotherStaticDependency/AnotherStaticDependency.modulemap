@@ -1,0 +1,6 @@
+module AnotherStaticDependency {
+  umbrella header "AnotherStaticDependency-umbrella.h"
+
+  export *
+  module * { export * }
+}
