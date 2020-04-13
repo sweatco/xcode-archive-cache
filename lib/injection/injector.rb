@@ -14,6 +14,7 @@ module XcodeArchiveCache
         @dependency_remover = DependencyRemover.new
         @build_flags_changer = BuildFlagsChanger.new
         @pods_fixer = PodsScriptFixer.new
+        @modulemap_fixer = ModulemapFixer.new(storage)
         @framework_embedder = FrameworkEmbedder.new
       end
 
@@ -34,8 +35,14 @@ module XcodeArchiveCache
           return
         end
 
+        no_rebuild_performed = root_node.state == :unpacked
+
         graph.nodes.each do |node|
-          headers_mover.prepare_headers_for_injection(node)
+          if no_rebuild_performed || node.state == :rebuilt_and_cached
+            headers_mover.prepare_headers_for_injection(node)
+            modulemap_fixer.fix_modulemap(node)
+          end
+
           add_as_prebuilt_dependency(node, target, node.is_root)
           remove_native_target_from_project(node)
         end
@@ -51,8 +58,8 @@ module XcodeArchiveCache
           pods_fixer.fix_embed_frameworks_script(target, graph, storage.container_dir_path)
           pods_fixer.fix_copy_resources_script(target, graph, storage.container_dir_path)
         else
-          framework_nodes = graph.nodes.select {|node| node.has_framework_product?}
-          framework_file_paths = framework_nodes.map {|node| File.join(storage.get_storage_path(node), node.product_file_name)}
+          framework_nodes = graph.nodes.select { |node| node.has_framework_product? }
+          framework_file_paths = framework_nodes.map { |node| File.join(storage.get_storage_path(node), node.product_file_name) }
           framework_embedder.embed(framework_file_paths, target)
         end
 
@@ -86,6 +93,10 @@ module XcodeArchiveCache
       #
       attr_reader :pods_fixer
 
+      # @return [ModulemapFixer]
+      #
+      attr_reader :modulemap_fixer
+
       # @return [FrameworkEmbedder]
       #
       attr_reader :framework_embedder
@@ -93,9 +104,10 @@ module XcodeArchiveCache
       # @param [Array<XcodeArchiveCache::BuildGraph::Node>] nodes
       #
       def inject_unpacked(nodes)
-        cached_nodes = nodes.select {|node| node.state == :unpacked}
+        cached_nodes = nodes.select { |node| node.state == :unpacked }
         cached_nodes.each do |node|
           headers_mover.prepare_headers_for_injection(node)
+          modulemap_fixer.fix_modulemap(node)
           add_as_prebuilt_to_dependents(node)
         end
       end
@@ -108,7 +120,7 @@ module XcodeArchiveCache
 
         nodes
             .select(&:waiting_for_rebuild)
-            .each {|node| add_header_paths_to_target(node.native_target, header_storage_paths)}
+            .each { |node| add_header_paths_to_target(node.native_target, header_storage_paths) }
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
@@ -146,7 +158,7 @@ module XcodeArchiveCache
       def save_graph_projects(graph)
         projects = graph.nodes.map(&:native_target).map(&:project).uniq
         debug("updating #{projects.length} projects")
-        projects.each {|project| project.save}
+        projects.each { |project| project.save }
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
@@ -188,10 +200,16 @@ module XcodeArchiveCache
       def add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
         build_configuration = find_build_configuration(dependent_target)
 
-        if should_link
+        injected_modulemap_file_path = storage.get_modulemap_path(prebuilt_node)
+        if injected_modulemap_file_path
+          modulemap_file_names = ["#{prebuilt_node.module_name}.modulemap", File.basename(prebuilt_node.modulemap_file_path)]
+          build_flags_changer.fix_module_map_path(build_configuration, modulemap_file_names, injected_modulemap_file_path)
+        end
+
+        # if should_link
           artifact_location = storage.get_storage_path(prebuilt_node)
           build_flags_changer.add_library_search_path(build_configuration, artifact_location)
-        end
+        # end
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
       end
@@ -199,7 +217,7 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       #
       def find_build_configuration(target)
-        build_configuration = target.build_configurations.select {|configuration| configuration.name == configuration_name}.first
+        build_configuration = target.build_configurations.select { |configuration| configuration.name == configuration_name }.first
         unless build_configuration
           raise Informative, "#{configuration_name} build configuration not found on target #{node.name}"
         end

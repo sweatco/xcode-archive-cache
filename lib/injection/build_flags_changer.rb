@@ -64,13 +64,36 @@ module XcodeArchiveCache
         add_cflag(build_configuration, path_to_capital_i(path))
       end
 
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [String] path
+      #
+      def fix_module_map_path(build_configuration, old_modulemap_names, path)
+        replace_module_map_flag(build_configuration.build_settings, OTHER_CFLAGS_KEY, old_modulemap_names, path)
+        replace_module_map_flag(build_configuration.build_settings, OTHER_CPLUSPLUSFLAGS_KEY, old_modulemap_names, path)
+        replace_module_map_flag(build_configuration.build_settings, OTHER_SWIFT_FLAGS_KEY, old_modulemap_names, path)
+
+        if build_configuration.base_configuration_reference
+          xcconfig_path = build_configuration.base_configuration_reference.real_path
+          return unless File.exist?(xcconfig_path)
+          xcconfig = Xcodeproj::Config.new(xcconfig_path)
+
+          replace_module_map_flag(xcconfig.attributes, OTHER_CFLAGS_KEY, old_modulemap_names, path)
+          replace_module_map_flag(xcconfig.attributes, OTHER_CPLUSPLUSFLAGS_KEY, old_modulemap_names, path)
+          replace_module_map_flag(xcconfig.attributes, OTHER_SWIFT_FLAGS_KEY, old_modulemap_names, path)
+
+          xcconfig.save_as(Pathname.new(xcconfig_path))
+        end
+      end
+
       private
 
       FRAMEWORK_SEARCH_PATHS_KEY = "FRAMEWORK_SEARCH_PATHS"
       LIBRARY_SEARCH_PATHS_KEY = "LIBRARY_SEARCH_PATHS"
       HEADER_SEARCH_PATHS_KEY = "HEADER_SEARCH_PATHS"
       OTHER_CFLAGS_KEY = "OTHER_CFLAGS"
+      OTHER_CPLUSPLUSFLAGS_KEY = "OTHER_CPLUSPLUSFLAGS"
       OTHER_LDFLAGS_KEY = "OTHER_LDFLAGS"
+      OTHER_SWIFT_FLAGS_KEY = "OTHER_SWIFT_FLAGS"
       INHERITED_SETTINGS_VALUE = "$(inherited)"
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
@@ -166,6 +189,39 @@ module XcodeArchiveCache
         return unless framework_name
 
         "-framework \"#{framework_name}\""
+      end
+
+      def replace_module_map_flag(build_settings, flags_key, old_modulemap_names, path)
+        flags = build_settings[flags_key]
+        if flags
+          build_settings[flags_key] = replace_module_map_path(flags, old_modulemap_names, path)
+        end
+      end
+
+      def replace_module_map_path(flags, old_modulemap_names, path)
+        return if flags == nil
+
+        is_flags_string = flags.is_a?(String)
+        flags = flags.split(" ") if is_flags_string
+        updated_flags = flags
+                            .map { |flags_line| flags_line.split(" ") }
+                            .flatten
+                            .map do |line|
+          updated_line = line
+
+          if line.include?("-fmodule-map-file=")
+            old_modulemap_names.each do |name|
+              if line.include?(name)
+                updated_line = "-fmodule-map-file=\"#{path}\""
+                break
+              end
+            end
+          end
+
+          updated_line
+        end
+
+        is_flags_string ? updated_flags.join(" ") : updated_flags
       end
     end
   end

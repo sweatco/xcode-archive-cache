@@ -86,9 +86,45 @@ module XcodeArchiveCache
       # @return [String]
       #
       def dsym_file_name
-        return nil unless build_settings
+        build_settings ? build_settings[XcodeArchiveCache::BuildSettings::DWARF_DSYM_FILE_NAME_KEY] : nil
+      end
 
-        build_settings[XcodeArchiveCache::BuildSettings::DWARF_DSYM_FILE_NAME_KEY]
+      # @return [String]
+      #
+      def modulemap_file_path
+        modulemap_file = build_settings[XcodeArchiveCache::BuildSettings::MODULEMAP_FILE_KEY]
+        return unless modulemap_file
+
+        Pathname.new(modulemap_file).absolute? ? modulemap_file : File.join(File.dirname(native_target.project.path), modulemap_file)
+      end
+
+      # @return [String]
+      #
+      def swift_objc_interface_header_path
+        header_file = swift_objc_interface_header_file
+        return if header_file == nil
+
+        File.join(build_settings[XcodeArchiveCache::BuildSettings::DERIVED_SOURCES_DIR_KEY], header_file)
+      end
+
+      # @return [String]
+      #
+      def swift_objc_interface_header_file
+        header_file = build_settings[XcodeArchiveCache::BuildSettings::SWIFT_OBJC_INTERFACE_HEADER_NAME_KEY]
+        if header_file == nil
+          our_module_name = module_name
+          return if our_module_name == nil
+
+          header_file = our_module_name + "-Swift.h"
+        end
+
+        header_file
+      end
+
+      # @return [String]
+      #
+      def module_name
+        build_settings[XcodeArchiveCache::BuildSettings::PRODUCT_MODULE_NAME_KEY]
       end
 
       # @return [Array<Node>]
