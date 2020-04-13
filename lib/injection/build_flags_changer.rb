@@ -203,6 +203,8 @@ module XcodeArchiveCache
         end
       end
 
+      MODULE_MAP_FLAG = "-fmodule-map-file="
+
       # @param [String] flags
       # @param [Array<String>] old_modulemap_names
       # @param [String] path
@@ -220,10 +222,10 @@ module XcodeArchiveCache
                             .map do |line|
           updated_line = line
 
-          if line.include?("-fmodule-map-file=")
+          if line.include?(MODULE_MAP_FLAG)
             old_modulemap_names.each do |name|
               if line.include?(name)
-                updated_line = "-fmodule-map-file=\"#{path}\""
+                updated_line = "#{MODULE_MAP_FLAG}\"#{path}\""
                 break
               end
             end
