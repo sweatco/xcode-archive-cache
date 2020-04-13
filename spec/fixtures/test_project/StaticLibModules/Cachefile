@@ -1,0 +1,12 @@
+workspace "StaticLibModules" do
+  configuration "Debug" do
+    build_configuration "Debug"
+    action "build"
+  end
+
+  derived_data_path "build"
+
+  target "StaticLibModules" do
+    cache "libPods-StaticLibModules.a"
+  end
+end

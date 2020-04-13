@@ -52,6 +52,6 @@ build-iPhoneSimulator/
 # unless supporting rvm < 1.11.0 or doing something fancy, ignore this:
 .rvmrc
 
-spec/fixtures/test_project/Test/Pods
+**/Pods
 **/xcuserdata
 
