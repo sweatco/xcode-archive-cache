@@ -92,18 +92,10 @@ module XcodeArchiveCache
       graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
       graph = graph_builder.build_graph(target, dependency_target)
 
-      evaluate_for_rebuild(graph)
+      @rebuild_evaluator.evaluate_build_graph(graph)
       unpack_cached_artifacts(graph)
       rebuild_if_needed(xcodebuild_executor, dependency_target, graph)
       @injector.perform_outgoing_injection(graph, target)
-    end
-
-    # @param [XcodeArchiveCache::BuildGraph::Graph] graph
-    #
-    def evaluate_for_rebuild(graph)
-      graph.nodes.each do |node|
-        @rebuild_evaluator.evaluate(node)
-      end
     end
 
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
