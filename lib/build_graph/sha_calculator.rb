@@ -36,6 +36,9 @@ module XcodeArchiveCache
           inputs << list_build_phase_inputs(build_phase)
         end
 
+        modulemap_file_path = node.modulemap_file_path
+        inputs << modulemap_file_path if modulemap_file_path
+
         # file path order should not affect evaluation result
         inputs.flatten.compact.sort
       end
