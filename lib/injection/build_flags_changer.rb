@@ -191,6 +191,11 @@ module XcodeArchiveCache
         "-framework \"#{framework_name}\""
       end
 
+      # @param [Hash] build_settings
+      # @param [String] flags_key
+      # @param [Array<String>] old_modulemap_names
+      # @param [String] path
+      #
       def replace_module_map_flag(build_settings, flags_key, old_modulemap_names, path)
         flags = build_settings[flags_key]
         if flags
@@ -198,6 +203,12 @@ module XcodeArchiveCache
         end
       end
 
+      # @param [String] flags
+      # @param [Array<String>] old_modulemap_names
+      # @param [String] path
+      #
+      # @return [String]
+      #
       def replace_module_map_path(flags, old_modulemap_names, path)
         return if flags == nil
 
