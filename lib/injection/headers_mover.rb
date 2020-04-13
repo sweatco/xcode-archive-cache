@@ -19,14 +19,27 @@ module XcodeArchiveCache
 
         node.native_target.copy_files_build_phases.each do |build_phase|
           file_paths = build_phase.files
-                           .map {|build_file| get_real_path(build_file)}
+                           .map { |build_file| get_real_path(build_file) }
                            .compact
                            .uniq
-                           .select {|path| File.extname(path) == ".h"}
+                           .select { |path| File.extname(path) == ".h" }
           destination_path = get_destination_dir_path(node, build_phase)
           storage.store_headers(node, destination_path, file_paths)
 
           header_count += file_paths.length
+        end
+
+        if node.has_static_library_product?
+          headers_file_paths = node.native_target
+                                   .headers_build_phase
+                                   .files
+                                   .map { |header| get_real_path(header) }
+                                   .uniq
+          storage.store_default_headers(node, headers_file_paths)
+
+          header_count += headers_file_paths.length
+
+          storage.store_modulemap(node)
         end
 
         debug("found #{header_count} headers")
