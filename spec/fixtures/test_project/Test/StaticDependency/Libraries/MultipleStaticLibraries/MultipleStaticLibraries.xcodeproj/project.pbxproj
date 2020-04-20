@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4420952D243B7F920066BD0F /* AnotherStaticDependency-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = 44061B5C243735CF00B996E1 /* AnotherStaticDependency-umbrella.h */; };
+		4420952E243B7F920066BD0F /* AnotherStaticDependency.h in Headers */ = {isa = PBXBuildFile; fileRef = 4435C869241A905500F924C1 /* AnotherStaticDependency.h */; };
 		4435C875241A907D00F924C1 /* AnotherStaticDependency.m in Sources */ = {isa = PBXBuildFile; fileRef = 4435C868241A905500F924C1 /* AnotherStaticDependency.m */; };
 		4467F93022C677B5003DBC92 /* LibraryThatUsesSibling.m in Sources */ = {isa = PBXBuildFile; fileRef = 4467F92F22C677B5003DBC92 /* LibraryThatUsesSibling.m */; };
 		4467F93122C677B5003DBC92 /* LibraryThatUsesSibling.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4467F92E22C677B5003DBC92 /* LibraryThatUsesSibling.h */; };
@@ -35,6 +37,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		44061B5C243735CF00B996E1 /* AnotherStaticDependency-umbrella.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AnotherStaticDependency-umbrella.h"; sourceTree = "<group>"; };
+		44061B5D243735CF00B996E1 /* AnotherStaticDependency.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = AnotherStaticDependency.modulemap; sourceTree = "<group>"; };
 		4435C868241A905500F924C1 /* AnotherStaticDependency.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AnotherStaticDependency.m; sourceTree = "<group>"; };
 		4435C869241A905500F924C1 /* AnotherStaticDependency.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AnotherStaticDependency.h; sourceTree = "<group>"; };
 		4435C874241A906300F924C1 /* libAnotherStaticDependency.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAnotherStaticDependency.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,6 +68,8 @@
 		4435C867241A905500F924C1 /* AnotherStaticDependency */ = {
 			isa = PBXGroup;
 			children = (
+				44061B5C243735CF00B996E1 /* AnotherStaticDependency-umbrella.h */,
+				44061B5D243735CF00B996E1 /* AnotherStaticDependency.modulemap */,
 				4435C868241A905500F924C1 /* AnotherStaticDependency.m */,
 				4435C869241A905500F924C1 /* AnotherStaticDependency.h */,
 			);
@@ -99,11 +105,24 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		4420952A243B7F3A0066BD0F /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4420952D243B7F920066BD0F /* AnotherStaticDependency-umbrella.h in Headers */,
+				4420952E243B7F920066BD0F /* AnotherStaticDependency.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
 		4435C86B241A906300F924C1 /* AnotherStaticDependency */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4435C871241A906300F924C1 /* Build configuration list for PBXNativeTarget "AnotherStaticDependency" */;
 			buildPhases = (
+				4420952A243B7F3A0066BD0F /* Headers */,
 				4435C86C241A906300F924C1 /* Sources */,
 				4435C86E241A906300F924C1 /* Frameworks */,
 				4435C86F241A906300F924C1 /* CopyFiles */,
@@ -190,6 +209,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				MODULEMAP_FILE = "${SRCROOT}/AnotherStaticDependency/AnotherStaticDependency.modulemap";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -201,6 +221,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				MODULEMAP_FILE = "${SRCROOT}/AnotherStaticDependency/AnotherStaticDependency.modulemap";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

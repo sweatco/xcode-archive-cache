@@ -13,7 +13,7 @@ module XcodeArchiveCache
       # @return [Hash{String => Container}]
       #         Target build settings keyed by target name
       #
-      def extract_per_target(build_settings)
+      def extract_per_target(build_settings, fix_simulator)
         per_target_settings = build_settings.split("Build settings for action")
         result = Hash.new
 
@@ -22,6 +22,7 @@ module XcodeArchiveCache
           target_name = get_target_name(parsed_settings)
           next unless target_name
 
+          replace_platform_with_simulator(parsed_settings) if fix_simulator
           filtered_settings = filter.filter(parsed_settings)
           result[target_name] = Container.new(parsed_settings, filtered_settings)
         end
@@ -65,6 +66,25 @@ module XcodeArchiveCache
         result
       end
 
+
+      # @param [Hash{String => String}] settings
+      #
+      def replace_platform_with_simulator(settings)
+        original_platform = settings[EFFECTIVE_PLATFORM_NAME_KEY]
+        simulator_platform = settings[CORRESPONDING_SIMULATOR_PLATFORM_NAME_KEY]
+        settings[EFFECTIVE_PLATFORM_NAME_KEY] = "-#{simulator_platform}"
+
+        configuration = settings[CONFIGURATION_KEY]
+        path_regexp = Regexp.new("#{configuration}#{original_platform}")
+        simulator_path = "#{configuration}-#{simulator_platform}"
+        settings.each do |key, value|
+          settings[key] = value.gsub(path_regexp, simulator_path)
+        end
+      end
+
+      EFFECTIVE_PLATFORM_NAME_KEY = "EFFECTIVE_PLATFORM_NAME".freeze
+      CORRESPONDING_SIMULATOR_PLATFORM_NAME_KEY = "CORRESPONDING_SIMULATOR_PLATFORM_NAME".freeze
+      CONFIGURATION_KEY = "CONFIGURATION".freeze
       TARGET_NAME_KEY = "TARGETNAME".freeze
 
       # @param [Hash{String => String}] parsed_settings

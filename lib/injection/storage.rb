@@ -31,10 +31,39 @@ module XcodeArchiveCache
         end
 
         file_paths.each do |file_path|
-          FileUtils.cp(file_path, File.join(storage_path, File.basename(file_path)))
+          FileUtils.cp(file_path, get_stored_file_path(storage_path, file_path))
         end
 
         save_header_storage_path(storage_path, node)
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      # @param [Array<String>] file_paths
+      #
+      def store_default_headers(node, file_paths)
+        store_headers(node, get_default_headers_storage_path(node), file_paths)
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      def store_modulemap(node)
+        modulemap_file_path = node.modulemap_file_path
+        if modulemap_file_path && File.exist?(modulemap_file_path)
+          store_headers(node, get_default_headers_storage_path(node), [modulemap_file_path])
+        end
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      # @return [String]
+      #
+      def get_modulemap_path(node)
+        modulemap_file_path = node.modulemap_file_path
+        return if modulemap_file_path == nil
+
+        storage_path = get_full_header_storage_path(get_default_headers_storage_path(node))
+        stored_modulemap_file_path = get_stored_file_path(storage_path, modulemap_file_path)
+        File.exist?(stored_modulemap_file_path) ? stored_modulemap_file_path : nil
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
@@ -70,7 +99,7 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
-      # @return [Array<String>]
+      # @return [String]
       #
       def get_headers_storage_paths(node)
         headers_storage_dir_paths[node.name]
@@ -78,9 +107,17 @@ module XcodeArchiveCache
 
       def get_all_headers_storage_paths
         headers_storage_dir_paths
-            .map {|_, path| path}
+            .map { |_, path| path }
             .flatten
             .uniq
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      # @return [String]
+      #
+      def get_default_headers_storage_path(node)
+        "include/#{node.name}"
       end
 
       private
@@ -97,6 +134,15 @@ module XcodeArchiveCache
       #
       def get_full_header_storage_path(path)
         File.absolute_path(path, container_dir_path)
+      end
+
+      # @param [String] storage_path
+      # @param [String] file_path
+      #
+      # @return [String]
+      #
+      def get_stored_file_path(storage_path, file_path)
+        File.join(storage_path, File.basename(file_path))
       end
 
       # @param [String] path

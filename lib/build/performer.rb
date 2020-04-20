@@ -35,7 +35,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
       def should_rebuild?(graph)
-        graph.nodes.reduce(false) {|rebuild, node| rebuild || node.waiting_for_rebuild}
+        graph.root_node.state != :unpacked
       end
 
       private

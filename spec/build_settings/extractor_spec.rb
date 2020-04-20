@@ -19,11 +19,11 @@ RSpec.describe XcodeArchiveCache::BuildSettings::Extractor, "#extract_build_sett
   end
 
   it "should correctly behave when no input given" do
-    expect(@extractor.extract_per_target("")).to eq(Hash.new)
+    expect(@extractor.extract_per_target("", false)).to eq(Hash.new)
   end
 
   it "should correctly extract settings for each target" do
-    per_target_settings = @extractor.extract_per_target(@input)
+    per_target_settings = @extractor.extract_per_target(@input, false)
     expect(per_target_settings.keys).to eq(%w(first second))
 
     all_setting_names = %w(TARGETNAME SETTING ANOTHER_SETTING)
@@ -41,7 +41,7 @@ RSpec.describe XcodeArchiveCache::BuildSettings::Extractor, "#extract_build_sett
   end
 
   it "should correctly filter out extra settings for each target" do
-    per_target_settings = @extractor.extract_per_target(@input)
+    per_target_settings = @extractor.extract_per_target(@input, false)
 
     first_target_settings = per_target_settings["first"]
     filtered_settings = first_target_settings.filtered

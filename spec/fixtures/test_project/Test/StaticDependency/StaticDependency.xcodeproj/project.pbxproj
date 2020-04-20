@@ -187,6 +187,7 @@
 				TargetAttributes = {
 					44F83BAD2293FD7100D9B6AC = {
 						CreatedOnToolsVersion = 10.2.1;
+						LastSwiftMigration = 1130;
 					};
 				};
 			};
@@ -380,14 +381,19 @@
 		44F83BB62293FD7100D9B6AC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = (
-					"${SRCROOT}/Libraries/LibraryWithFrameworkDependency/LibraryWithFrameworkDependency",
-					"${SRCROOT}/Libraries/MultipleStaticLibraries/AnotherStaticDependency",
+				HEADER_SEARCH_PATHS = "${SRCROOT}/Libraries/LibraryWithFrameworkDependency/LibraryWithFrameworkDependency";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
 				);
+				OTHER_CFLAGS = "-fmodule-map-file=${SRCROOT}/Libraries/MultipleStaticLibraries/AnotherStaticDependency/AnotherStaticDependency.modulemap";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -396,11 +402,15 @@
 		44F83BB72293FD7100D9B6AC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = (
-					"${SRCROOT}/Libraries/LibraryWithFrameworkDependency/LibraryWithFrameworkDependency",
-					"${SRCROOT}/Libraries/MultipleStaticLibraries/AnotherStaticDependency",
+				HEADER_SEARCH_PATHS = "${SRCROOT}/Libraries/LibraryWithFrameworkDependency/LibraryWithFrameworkDependency";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
 				);
+				OTHER_CFLAGS = "-fmodule-map-file=${SRCROOT}/Libraries/MultipleStaticLibraries/AnotherStaticDependency/AnotherStaticDependency.modulemap";
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

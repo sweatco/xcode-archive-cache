@@ -55,6 +55,10 @@ module XcodeArchiveCache
         shell_executor.execute(command, true)
       end
 
+      def set_up_for_simulator?
+        destination_flag.include?("Simulator")
+      end
+
       private
 
       # @return [String]

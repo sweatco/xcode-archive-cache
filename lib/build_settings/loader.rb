@@ -3,6 +3,11 @@ module XcodeArchiveCache
 
     FULL_PRODUCT_NAME_KEY = "FULL_PRODUCT_NAME".freeze
     DWARF_DSYM_FILE_NAME_KEY = "DWARF_DSYM_FILE_NAME".freeze
+    MODULEMAP_FILE_KEY = "MODULEMAP_FILE".freeze
+    SWIFT_OBJC_INTERFACE_HEADER_NAME_KEY = "SWIFT_OBJC_INTERFACE_HEADER_NAME".freeze
+    SWIFT_MODULE_NAME_KEY = "SWIFT_MODULE_NAME".freeze
+    PRODUCT_MODULE_NAME_KEY = "PRODUCT_MODULE_NAME".freeze
+    DERIVED_SOURCES_DIR_KEY = "DERIVED_SOURCES_DIR".freeze
 
     class Container
 
@@ -58,9 +63,11 @@ module XcodeArchiveCache
           end
         end
 
+        should_fix_settings = executor.set_up_for_simulator?
+
         threads.each do |thread|
           project_path, all_targets_settings = thread.value
-          per_target_settings = extractor.extract_per_target(all_targets_settings)
+          per_target_settings = extractor.extract_per_target(all_targets_settings, should_fix_settings)
           set_project_settings(project_path, per_target_settings)
         end
       end

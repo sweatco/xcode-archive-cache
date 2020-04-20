@@ -10,7 +10,7 @@ module XcodeArchiveCache
       # Machine-dependent settings i.e. paths, user names, group names are rejected
       #
       def filter(settings, settings_to_keep = SETTINGS_TO_KEEP)
-        filtered_settings = settings.select {|name, _| settings_to_keep.include?(name)}
+        filtered_settings = settings.select { |name, _| settings_to_keep.include?(name) }
         SETTINGS_TO_STRIP.each do |name|
           value = filtered_settings[name]
           next if value == nil
@@ -44,7 +44,9 @@ module XcodeArchiveCache
         # splitting will be broken, but probability of
         # someone using such path is quite low (or it isn't ?)
         #
-        value_components = value_without_quotes.split(/\s-/)
+        value_components = value_without_quotes
+                               .split(/^-|\s-/)
+                               .select { |component| component.length > 0 }
 
         index = 0
         indices_to_remove = []
@@ -66,7 +68,8 @@ module XcodeArchiveCache
           kept_components.push(component) unless indices_to_remove.include?(component_index)
         end
 
-        kept_components.join(" -")
+        result = kept_components.join(" -")
+        result.length > 0 ? "-#{result}" : ""
       end
 
       # TODO: extend
@@ -283,6 +286,7 @@ module XcodeArchiveCache
         output-file-map
         save-optimization-record-path
         working-directory
+        fmodule-map-file
         )
     end
   end

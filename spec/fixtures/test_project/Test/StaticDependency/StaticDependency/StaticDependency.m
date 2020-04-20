@@ -8,7 +8,8 @@
 
 #import "StaticDependency.h"
 #import "LibraryWithFrameworkDependency.h"
-#import "AnotherStaticDependency.h"
+
+@import AnotherStaticDependency;
 
 @implementation StaticDependency
 

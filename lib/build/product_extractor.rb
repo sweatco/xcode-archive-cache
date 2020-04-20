@@ -17,7 +17,7 @@ module XcodeArchiveCache
       #
       def list_product_contents(built_node)
         file_paths = list_products(built_node)
-        file_paths.select {|path| File.exist?(path)}.map {|path| File.realpath(path)}
+        file_paths.select { |path| File.exist?(path) }.map { |path| File.realpath(path) }
       end
 
       private
@@ -78,7 +78,15 @@ module XcodeArchiveCache
           raise Informative, "Product of type #{built_node.native_target.product_type} not found for #{built_node.name}"
         end
 
-        [product_path]
+        paths = [product_path]
+
+        # this one is generated during Swift compilation
+        # so we need to cache it as well
+        #
+        swift_objc_interface_header_path = built_node.swift_objc_interface_header_path
+        paths << swift_objc_interface_header_path if swift_objc_interface_header_path
+
+        paths
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] built_node
@@ -106,7 +114,7 @@ module XcodeArchiveCache
         end
 
         uuids = list_bc_symbolmap_uuids(executable_path)
-        uuids.map {|uuid| find_bc_symbolmap(uuid)}.flatten
+        uuids.map { |uuid| find_bc_symbolmap(uuid) }.flatten
       end
 
       # @param [String] executable_path
@@ -114,7 +122,11 @@ module XcodeArchiveCache
       # @return [Array<String>]
       #
       def list_bc_symbolmap_uuids(executable_path)
-        shell_executor.execute_for_output("otool -l #{executable_path} | grep uuid | awk {'print $2'}").split("\n")
+        begin
+          shell_executor.execute_for_output("otool -l #{executable_path} | grep uuid | awk {'print $2'}").split("\n")
+        rescue
+          []
+        end
       end
 
       # @param [String] uuid

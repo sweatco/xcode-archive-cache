@@ -57,12 +57,12 @@ module XcodeArchiveCache
       # @return [String]
       #
       def pipefail_flags(print_command)
-        flags = %w(e o)
+        flags = ["e", "o pipefail"]
         if print_command
           flags.insert(1, "x")
         end
 
-        "-" + flags.join("")
+        "-" + flags.join(" -")
       end
     end
   end
