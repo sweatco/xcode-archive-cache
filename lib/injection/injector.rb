@@ -43,7 +43,7 @@ module XcodeArchiveCache
             modulemap_fixer.fix_modulemap(node)
           end
 
-          add_as_prebuilt_dependency(node, target, node.is_root)
+          add_as_prebuilt_dependency(node, target)
           remove_native_target_from_project(node)
         end
 
@@ -146,8 +146,7 @@ module XcodeArchiveCache
                                    .all_dependent_nodes
                                    .select(&:waiting_for_rebuild)
         dependent_to_rebuild.each do |dependent_node|
-          should_link = prebuilt_node.dependent.include?(dependent_node)
-          add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target, should_link)
+          add_as_prebuilt_dependency(prebuilt_node, dependent_node.native_target)
         end
 
         remove_native_target_from_project(prebuilt_node)
@@ -164,7 +163,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
       #
-      def add_as_prebuilt_dependency(prebuilt_node, dependent_target, should_link)
+      def add_as_prebuilt_dependency(prebuilt_node, dependent_target)
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
         unless prebuilt_node.has_acceptable_product?
@@ -174,7 +173,7 @@ module XcodeArchiveCache
         if prebuilt_node.has_framework_product?
           add_as_prebuilt_framework(prebuilt_node, dependent_target)
         elsif prebuilt_node.has_static_library_product?
-          add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
+          add_as_prebuilt_static_lib(prebuilt_node, dependent_target)
         end
 
         debug("done with #{prebuilt_node.name} for #{dependent_target.display_name}")
@@ -195,9 +194,8 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
-      # @param [Boolean] should_link
       #
-      def add_as_prebuilt_static_lib(prebuilt_node, dependent_target, should_link)
+      def add_as_prebuilt_static_lib(prebuilt_node, dependent_target)
         build_configuration = find_build_configuration(dependent_target)
 
         injected_modulemap_file_path = storage.get_modulemap_path(prebuilt_node)
@@ -206,10 +204,16 @@ module XcodeArchiveCache
           build_flags_changer.fix_module_map_path(build_configuration, modulemap_file_names, injected_modulemap_file_path)
         end
 
-        # if should_link
-          artifact_location = storage.get_storage_path(prebuilt_node)
-          build_flags_changer.add_library_search_path(build_configuration, artifact_location)
-        # end
+        artifact_location = storage.get_storage_path(prebuilt_node)
+        build_flags_changer.add_library_search_path(build_configuration, artifact_location)
+
+        if dependency_remover.is_linked(prebuilt_node, dependent_target)
+          if dependent_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
+            build_flags_changer.add_static_lib_libtool_flag(build_configuration, prebuilt_node)
+          else
+            build_flags_changer.add_static_lib_linker_flag(build_configuration, prebuilt_node)
+          end
+        end
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
       end
