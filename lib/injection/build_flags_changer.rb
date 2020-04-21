@@ -26,6 +26,28 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
+      def add_static_lib_linker_flag(build_configuration, node)
+        flag = get_linker_flag(node)
+        if flag
+          debug("using ld flag #{flag}")
+          add_linker_flag(build_configuration, flag)
+        end
+      end
+
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      def add_static_lib_libtool_flag(build_configuration, node)
+        flag = get_linker_flag(node)
+        if flag
+          debug("using libtool flag #{flag}")
+          add_libtool_flag(build_configuration, flag)
+        end
+      end
+
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
       def add_framework_headers_iquote(build_configuration, artifact_location, node)
         headers_search_path = get_framework_headers_iquote(artifact_location, node)
         debug("using -iquote path #{headers_search_path}")
@@ -93,6 +115,7 @@ module XcodeArchiveCache
       OTHER_CFLAGS_KEY = "OTHER_CFLAGS"
       OTHER_CPLUSPLUSFLAGS_KEY = "OTHER_CPLUSPLUSFLAGS"
       OTHER_LDFLAGS_KEY = "OTHER_LDFLAGS"
+      OTHER_LIBTOOLFLAGS_KEY = "OTHER_LIBTOOLFLAGS"
       OTHER_SWIFT_FLAGS_KEY = "OTHER_SWIFT_FLAGS"
       INHERITED_SETTINGS_VALUE = "$(inherited)"
 
@@ -101,6 +124,13 @@ module XcodeArchiveCache
       #
       def add_linker_flag(build_configuration, flag)
         add_flag_to_configuration(build_configuration, OTHER_LDFLAGS_KEY, flag)
+      end
+
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [String] flag
+      #
+      def add_libtool_flag(build_configuration, flag)
+        add_flag_to_configuration(build_configuration, OTHER_LIBTOOLFLAGS_KEY, flag)
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
@@ -189,6 +219,18 @@ module XcodeArchiveCache
         return unless framework_name
 
         "-framework \"#{framework_name}\""
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] node
+      #
+      # @return [String]
+      #
+      #         libSomething.a -> -lSomething
+      #
+      def get_linker_flag(node)
+        return unless node.product_file_name
+
+        node.product_file_name.gsub(/^lib/, "-l").gsub(/\.a$/, "")
       end
 
       # @param [Hash] build_settings

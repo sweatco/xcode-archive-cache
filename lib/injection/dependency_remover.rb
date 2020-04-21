@@ -12,9 +12,19 @@ module XcodeArchiveCache
         debug("removing #{prebuilt_target.name} from #{dependent_target.display_name}")
 
         remove_from_dependencies(prebuilt_target, dependent_target)
+        remove_from_linking(prebuilt_node, dependent_target)
         remove_from_schemes(prebuilt_target, dependent_target)
 
         debug("finished removing #{prebuilt_target.name} from #{dependent_target.display_name}")
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
+      #
+      # @return [Boolean]
+      #
+      def is_linked(prebuilt_node, dependent_target)
+        !find_linked(prebuilt_node, dependent_target).empty?
       end
 
       private
@@ -46,7 +56,7 @@ module XcodeArchiveCache
       #
       def remove_from_linking(prebuilt_node, dependent_target)
         debug("product name is #{prebuilt_node.product_file_name}")
-        frameworks = dependent_target.frameworks_build_phase.files.select {|file| file.display_name == prebuilt_node.product_file_name}
+        frameworks = find_linked(prebuilt_node, dependent_target)
         debug("found #{frameworks.length} linked products")
 
         frameworks.each do |framework|
@@ -65,6 +75,17 @@ module XcodeArchiveCache
           scheme.save!
           debug("finished fixing scheme")
         end
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
+      # @param [XcodeArchiveCache::BuildGraph::Node] prebuilt_node
+      #
+      # @return [Array<PBXBuildFile>]
+      #
+      def find_linked(prebuilt_node, dependent_target)
+        return [] unless dependent_target.frameworks_build_phase
+
+        dependent_target.frameworks_build_phase.files.select {|file| file.display_name == prebuilt_node.product_file_name}
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
