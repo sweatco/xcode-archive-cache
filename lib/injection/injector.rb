@@ -189,6 +189,10 @@ module XcodeArchiveCache
         build_flags_changer.add_framework_search_path(build_configuration, artifact_location)
         build_flags_changer.add_framework_headers_iquote(build_configuration, artifact_location, prebuilt_node)
 
+        if dependency_remover.is_linked(prebuilt_node, dependent_target)
+          build_flags_changer.add_framework_linker_flag(build_configuration, prebuilt_node)
+        end
+
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
       end
 
