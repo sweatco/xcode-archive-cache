@@ -33,6 +33,7 @@ module XcodeArchiveCache
           headers_file_paths = node.native_target
                                    .headers_build_phase
                                    .files
+                                   .select { |file| file.settings && file.settings["ATTRIBUTES"].include?("Public") }
                                    .map { |header| get_real_path(header) }
                                    .uniq
           storage.store_default_headers(node, headers_file_paths)
