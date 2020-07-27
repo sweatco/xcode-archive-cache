@@ -14,12 +14,13 @@ module XcodeArchiveCache
       #
       def extract_targets(projects)
         projects
-            .map {|project| unnest(project)}
-            .flatten
-            .uniq
-            .map(&:native_targets)
-            .flatten
-            .select {|target| !target.test_target_type?}
+          .map {|project| unnest(project)}
+          .flatten
+          .sort_by(&:path)
+          .inject([]) {|unique, current| unique.last && unique.last.path == current.path ? unique : unique + [current]}
+          .map(&:native_targets)
+          .flatten
+          .select {|target| !target.test_target_type?}
       end
 
       # @param [String] platform_name
