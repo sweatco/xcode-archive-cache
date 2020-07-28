@@ -215,6 +215,7 @@ module XcodeArchiveCache
 
         artifact_location = storage.get_storage_path(prebuilt_node)
         build_flags_changer.add_library_search_path(build_configuration, artifact_location)
+        build_flags_changer.add_swift_include_path(build_configuration, artifact_location)
 
         if dependency_remover.is_linked(prebuilt_node, dependent_target)
           if dependent_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]

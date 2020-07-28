@@ -44,6 +44,11 @@ module XcodeArchiveCache
           add_libtool_flag(build_configuration, flag)
         end
       end
+      
+      def add_swift_include_path(build_configuration, path)
+        debug "adding #{path} to SWIFT_INCLUDE_PATHS"
+        add_flag_to_configuration(build_configuration, SWIFT_INCLUDE_PATHS_KEY, path_to_search_path(path))
+      end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [XcodeArchiveCache::BuildGraph::Node] node
@@ -111,6 +116,7 @@ module XcodeArchiveCache
       OTHER_LDFLAGS_KEY = "OTHER_LDFLAGS"
       OTHER_LIBTOOLFLAGS_KEY = "OTHER_LIBTOOLFLAGS"
       OTHER_SWIFT_FLAGS_KEY = "OTHER_SWIFT_FLAGS"
+      SWIFT_INCLUDE_PATHS_KEY = "SWIFT_INCLUDE_PATHS"
       INHERITED_SETTINGS_VALUE = "$(inherited)"
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
