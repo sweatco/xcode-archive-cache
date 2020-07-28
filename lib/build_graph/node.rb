@@ -100,15 +100,6 @@ module XcodeArchiveCache
 
       # @return [String]
       #
-      def swift_objc_interface_header_path
-        header_file = swift_objc_interface_header_file
-        return if header_file == nil
-
-        File.join(build_settings[XcodeArchiveCache::BuildSettings::DERIVED_SOURCES_DIR_KEY], header_file)
-      end
-
-      # @return [String]
-      #
       def swift_objc_interface_header_file
         header_file = build_settings[XcodeArchiveCache::BuildSettings::SWIFT_OBJC_INTERFACE_HEADER_NAME_KEY]
         if header_file == nil
