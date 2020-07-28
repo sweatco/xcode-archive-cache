@@ -96,14 +96,8 @@ module XcodeArchiveCache
 
         if build_configuration.base_configuration_reference
           xcconfig_path = build_configuration.base_configuration_reference.real_path
-          return unless File.exist?(xcconfig_path)
-          xcconfig = Xcodeproj::Config.new(xcconfig_path)
-
-          replace_module_map_flag(xcconfig.attributes, OTHER_CFLAGS_KEY, old_modulemap_names, path)
-          replace_module_map_flag(xcconfig.attributes, OTHER_CPLUSPLUSFLAGS_KEY, old_modulemap_names, path)
-          replace_module_map_flag(xcconfig.attributes, OTHER_SWIFT_FLAGS_KEY, old_modulemap_names, path)
-
-          xcconfig.save_as(Pathname.new(xcconfig_path))
+          project_dir = File.dirname(build_configuration.project.path)
+          replace_module_map_path_recursively(xcconfig_path, project_dir, old_modulemap_names, path)
         end
       end
 
@@ -246,6 +240,24 @@ module XcodeArchiveCache
       end
 
       MODULE_MAP_FLAG = "-fmodule-map-file="
+
+      def replace_module_map_path_recursively(xcconfig_path, project_dir, old_modulemap_names, path)
+        debug "changing modulemap path in #{xcconfig_path}"
+        return unless File.exist?(xcconfig_path)
+
+        xcconfig = Xcodeproj::Config.new(xcconfig_path)
+
+        replace_module_map_flag(xcconfig.attributes, OTHER_CFLAGS_KEY, old_modulemap_names, path)
+        replace_module_map_flag(xcconfig.attributes, OTHER_CPLUSPLUSFLAGS_KEY, old_modulemap_names, path)
+        replace_module_map_flag(xcconfig.attributes, OTHER_SWIFT_FLAGS_KEY, old_modulemap_names, path)
+
+        xcconfig.save_as(Pathname.new(xcconfig_path))
+
+        xcconfig.includes.each do |included_xcconfig|
+          included_xcconfig_path = File.join(project_dir, included_xcconfig)
+          replace_module_map_path_recursively(included_xcconfig_path, project_dir, old_modulemap_names, path)
+        end
+      end
 
       # @param [String] flags
       # @param [Array<String>] old_modulemap_names
