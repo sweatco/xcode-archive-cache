@@ -21,7 +21,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
       def perform_internal_injection(graph)
-        inject_unpacked(graph.nodes)
+        inject_unpacked_and_rebuilt(graph.nodes)
         add_header_paths(graph.nodes)
         save_graph_projects(graph)
       end
@@ -103,11 +103,16 @@ module XcodeArchiveCache
 
       # @param [Array<XcodeArchiveCache::BuildGraph::Node>] nodes
       #
-      def inject_unpacked(nodes)
+      def inject_unpacked_and_rebuilt(nodes)
         cached_nodes = nodes.select { |node| node.state == :unpacked }
         cached_nodes.each do |node|
           headers_mover.prepare_headers_for_injection(node)
           modulemap_fixer.fix_modulemap(node)
+          add_as_prebuilt_to_dependents(node)
+        end
+
+        built_nodes = nodes.select { |node| node.state == :rebuilt_and_cached }
+        built_nodes.each do |node|
           add_as_prebuilt_to_dependents(node)
         end
       end
