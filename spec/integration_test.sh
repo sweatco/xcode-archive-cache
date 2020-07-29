@@ -23,6 +23,7 @@ check_for_negative_result() {
 ROOT_PWD=$PWD
 TEST_PROJECT_LOCATION="$PWD/fixtures/test_project/Test"
 STATIC_LIB_MODULES_PROJECT_LOCATION="$PWD/fixtures/test_project/StaticLibModules"
+INTERSECING_BUILD_GRAPHS_PROJECT_LOCATION="$PWD/fixtures/test_project/IntersectingBuildGraphs"
 
 IOS_DESTINATION="platform=iOS Simulator,name=iPhone 11,OS=latest"
 WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 5 - 44mm,OS=latest"
@@ -198,6 +199,20 @@ update_another_static_library_string_and_test() {
   sed -i.bak "$REPLACE_EXPRESSION" TestUITests/TestUITests.swift
   check_for_positive_result "Update test"
 }
+
+set_pwd "$INTERSECING_BUILD_GRAPHS_PROJECT_LOCATION"
+WORKSPACE="IntersectingBuildGraphs.xcworkspace"
+TARGET="IntersectingBuildGraphs"
+
+ALL_LIBS="libKeychainAccess.a|libPods-Dependency.a|libPods-IntersectingBuildGraphs.a|libDependency.a"
+
+perform_full_clean && perform_app_test
+expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
+expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+
+clean_but_leave_build_cache && perform_app_test
+expect_libs_to_be_rebuilt "" "$CACHE_LOG_FILE"
+expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
 
 set_pwd "$STATIC_LIB_MODULES_PROJECT_LOCATION"
 WORKSPACE="StaticLibModules.xcworkspace"
