@@ -6,6 +6,10 @@
 //  Copyright © 2020 xcode-archive-test. All rights reserved.
 //
 
-class Dependency {
+import KeychainAccess
 
+public final class Dependency {
+    public init() {
+        let _ = Keychain()
+    }
 }
