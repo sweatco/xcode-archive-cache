@@ -205,7 +205,7 @@ TARGET="StaticLibModules"
 
 ALL_LIBS="liblottie-ios.a|libPods-StaticLibModules.a"
 
-# expect static lib with module to be properly injected,
+# expect static lib with module to be properly injected
 #
 perform_full_clean && perform_app_test
 expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
