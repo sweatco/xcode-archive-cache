@@ -211,6 +211,9 @@ module XcodeArchiveCache
         if injected_modulemap_file_path
           modulemap_file_names = ["#{prebuilt_node.module_name}.modulemap", File.basename(prebuilt_node.modulemap_file_path)]
           build_flags_changer.fix_module_map_path(build_configuration, modulemap_file_names, injected_modulemap_file_path)
+
+          original_modulemap_path = prebuilt_node.modulemap_file_path
+          add_header_paths_to_target(dependent_target, [File.dirname(original_modulemap_path)])
         end
 
         artifact_location = storage.get_storage_path(prebuilt_node)
