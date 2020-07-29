@@ -94,7 +94,7 @@ module XcodeArchiveCache
           end
         end
 
-        debug "modulemap header paths: #{header_paths}"
+        debug("modulemap header paths: #{header_paths}")
 
         header_paths
       end

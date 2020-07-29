@@ -88,7 +88,7 @@ module XcodeArchiveCache
         swift_objc_interface_header_glob = get_swift_objc_interface_header_glob(built_node)
         swift_objc_interface_header_path = Dir.glob(swift_objc_interface_header_glob).first
         if swift_objc_interface_header_path
-          debug "using Swift-ObjC interface header #{swift_objc_interface_header_path}"
+          debug("using Swift-ObjC interface header #{swift_objc_interface_header_path}")
           paths << swift_objc_interface_header_path
         end
 
@@ -97,7 +97,7 @@ module XcodeArchiveCache
           swiftmodule_path = Dir.glob(swiftmodule_glob).first
           
           if swiftmodule_path
-            debug "using swiftmodule #{swiftmodule_path}"
+            debug("using swiftmodule #{swiftmodule_path}")
             paths << swiftmodule_path
           end
         end

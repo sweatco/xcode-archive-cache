@@ -46,7 +46,7 @@ module XcodeArchiveCache
       end
       
       def add_swift_include_path(build_configuration, path)
-        debug "adding #{path} to SWIFT_INCLUDE_PATHS"
+        debug("adding #{path} to SWIFT_INCLUDE_PATHS")
         add_flag_to_configuration(build_configuration, SWIFT_INCLUDE_PATHS_KEY, path_to_search_path(path))
       end
 
@@ -248,7 +248,7 @@ module XcodeArchiveCache
       MODULE_MAP_FLAG = "-fmodule-map-file="
 
       def replace_module_map_path_recursively(xcconfig_path, project_dir, old_modulemap_names, path)
-        debug "changing modulemap path in #{xcconfig_path}"
+        debug("changing modulemap path in #{xcconfig_path}")
         return unless File.exist?(xcconfig_path)
 
         xcconfig = Xcodeproj::Config.new(xcconfig_path)
