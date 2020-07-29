@@ -11,6 +11,30 @@
 		CCBE6DB603806BE2A145DF93 /* libPods-Dependency.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5BB77CEF97310546A7270CA9 /* libPods-Dependency.a */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		4494292D24D1CDBB00A08953 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4494292724D1CDBB00A08953 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E8EE7F078656FABB8F6821D10FF994BB;
+			remoteInfo = KeychainAccess;
+		};
+		4494292F24D1CDBB00A08953 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4494292724D1CDBB00A08953 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 60618E0251736578A53D108F2031E4E6;
+			remoteInfo = "Pods-Dependency";
+		};
+		4494293124D1CDBB00A08953 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4494292724D1CDBB00A08953 /* Pods.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 2E5BFC7E692EA1E267A6509A3AFF9328;
+			remoteInfo = "Pods-IntersectingBuildGraphs";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		44CC64B224D18DF10044DF47 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -24,6 +48,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4494292724D1CDBB00A08953 /* Pods.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Pods.xcodeproj; path = ../Pods/Pods.xcodeproj; sourceTree = "<group>"; };
 		44CC64B424D18DF10044DF47 /* libDependency.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDependency.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		44CC64B724D18DF10044DF47 /* Dependency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependency.swift; sourceTree = "<group>"; };
 		5BB77CEF97310546A7270CA9 /* libPods-Dependency.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Dependency.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -43,9 +68,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4494292824D1CDBB00A08953 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4494292E24D1CDBB00A08953 /* libKeychainAccess.a */,
+				4494293024D1CDBB00A08953 /* libPods-Dependency.a */,
+				4494293224D1CDBB00A08953 /* libPods-IntersectingBuildGraphs.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		44CC64AB24D18DF10044DF47 = {
 			isa = PBXGroup;
 			children = (
+				4494292724D1CDBB00A08953 /* Pods.xcodeproj */,
 				44CC64B624D18DF10044DF47 /* Dependency */,
 				44CC64B524D18DF10044DF47 /* Products */,
 				B29CD40A472B09A5E1F2C93F /* Pods */,
@@ -134,12 +170,42 @@
 			mainGroup = 44CC64AB24D18DF10044DF47;
 			productRefGroup = 44CC64B524D18DF10044DF47 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4494292824D1CDBB00A08953 /* Products */;
+					ProjectRef = 4494292724D1CDBB00A08953 /* Pods.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				44CC64B324D18DF10044DF47 /* Dependency */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		4494292E24D1CDBB00A08953 /* libKeychainAccess.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libKeychainAccess.a;
+			remoteRef = 4494292D24D1CDBB00A08953 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4494293024D1CDBB00A08953 /* libPods-Dependency.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libPods-Dependency.a";
+			remoteRef = 4494292F24D1CDBB00A08953 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4494293224D1CDBB00A08953 /* libPods-IntersectingBuildGraphs.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libPods-IntersectingBuildGraphs.a";
+			remoteRef = 4494293124D1CDBB00A08953 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		8AA0B959CEF08108DC13A7AF /* [CP] Check Pods Manifest.lock */ = {
