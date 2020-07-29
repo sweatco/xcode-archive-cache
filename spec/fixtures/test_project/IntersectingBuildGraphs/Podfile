@@ -1,0 +1,24 @@
+platform :ios, '13.0'
+inhibit_all_warnings!
+
+workspace 'IntersectingBuildGraphs'
+
+def shared_pods
+  pod 'KeychainAccess', '~> 3.1'
+end
+
+target 'IntersectingBuildGraphs' do
+  project 'IntersectingBuildGraphs'
+  inherit! :search_paths
+  use_modular_headers!
+
+  shared_pods
+end
+
+target 'Dependency' do
+  project 'Dependency/Dependency'
+  inherit! :search_paths
+  use_modular_headers!
+
+  shared_pods
+end
