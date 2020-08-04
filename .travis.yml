@@ -5,8 +5,8 @@ branches:
 osx_image: xcode11.3
 cache:
   bundler: true
-  cocoapods: true
-podfile: spec/fixtures/test_project/Test/Podfile
+  directories:
+    - $HOME/.cocoapods/
 before_install:
   - bundle install --deployment && pod repo update
 install: true
