@@ -82,6 +82,10 @@ module XcodeArchiveCache
         build_settings_interpolator.interpolate(build_phase.dst_path, node.build_settings)
       end
 
+      # @param [String] modulemap_path
+      #
+      # @return [Array<String>]
+      #
       def enumerate_modulemap_headers(modulemap_path)
         modulemap_dir = File.dirname(modulemap_path)
         modulemap_lines = File.read(modulemap_path).split("\n")

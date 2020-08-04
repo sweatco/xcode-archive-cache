@@ -99,6 +99,11 @@ module XcodeArchiveCache
       end
     end
 
+    # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+    # @param [String] dependency_name
+    #
+    # @return [Xcodeproj::Project::Object::PBXNativeTarget]
+    #
     def find_dependency_target(target, dependency_name)
       dependency_target = @native_target_finder.find_for_product_name(dependency_name)
       unless dependency_target

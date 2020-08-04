@@ -45,12 +45,16 @@ module XcodeArchiveCache
         end
       end
       
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [String] path
+      #
       def add_swift_include_path(build_configuration, path)
         debug("adding #{path} to SWIFT_INCLUDE_PATHS")
         add_flag_to_configuration(build_configuration, SWIFT_INCLUDE_PATHS_KEY, path_to_search_path(path))
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [String] artifact_location
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def add_framework_headers_iquote(build_configuration, artifact_location, node)
@@ -92,6 +96,7 @@ module XcodeArchiveCache
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [Array<String>] old_modulemap_names
       # @param [String] path
       #
       def fix_module_map_path(build_configuration, old_modulemap_names, path)
@@ -247,6 +252,11 @@ module XcodeArchiveCache
 
       MODULE_MAP_FLAG = "-fmodule-map-file="
 
+      # @param [String] xcconfig_path
+      # @param [String] project_dir
+      # @param [Array<String>] old_modulemap_names
+      # @param [String] path
+      #
       def replace_module_map_path_recursively(xcconfig_path, project_dir, old_modulemap_names, path)
         debug("changing modulemap path in #{xcconfig_path}")
         return unless File.exist?(xcconfig_path)

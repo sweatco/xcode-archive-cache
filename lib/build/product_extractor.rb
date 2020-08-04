@@ -124,6 +124,10 @@ module XcodeArchiveCache
         get_product_glob(File.basename(built_node.swift_objc_interface_header_file))
       end
 
+      # @param [XcodeArchiveCache::BuildGraph::Node] built_node
+      #
+      # @return [String]
+      #
       def get_swiftmodule_glob(built_node)
         if built_node.module_name
           get_product_glob(built_node.module_name + ".swiftmodule")
