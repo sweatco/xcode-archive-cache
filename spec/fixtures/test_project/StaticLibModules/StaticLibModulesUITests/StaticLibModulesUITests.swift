@@ -9,17 +9,11 @@
 import XCTest
 
 class StaticLibModulesUITests: XCTestCase {
-
     override func setUp() {
         continueAfterFailure = false
     }
 
-    override func tearDown() {
-        
-    }
-
-    func testExample() {
-        // UI tests must launch the application that they test.
+    func testLottiePresence() {
         let app = XCUIApplication()
         app.launch()
 
