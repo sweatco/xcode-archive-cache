@@ -5,8 +5,6 @@ branches:
 osx_image: xcode11.3
 cache:
   bundler: true
-  directories:
-    - $HOME/.cocoapods/
 before_install:
   - bundle install --deployment && pod repo update
 install: true
