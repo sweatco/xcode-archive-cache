@@ -68,34 +68,49 @@ module XcodeArchiveCache
         raise Informative, "Target not found for #{target_config.name}"
       end
 
+      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.active_configuration.build_configuration,
+                                                                        target.platform_name,
+                                                                        config.settings.destination,
+                                                                        config.active_configuration.action,
+                                                                        config.active_configuration.xcodebuild_args)
+      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
+
+      dependency_targets = Hash.new
+      build_graphs = Hash.new
+
       target_config.dependencies.each do |dependency_name|
-        handle_dependency(target, dependency_name)
+        info("creating build graph for #{dependency_name}")
+
+        dependency_target = find_dependency_target(target, dependency_name)
+        dependency_targets[dependency_name] = dependency_target
+        build_graphs[dependency_name] = graph_builder.build_graph(target, dependency_target)
+      end
+
+      target_config.dependencies.each do |dependency_name|
+        info("processing #{dependency_name}")
+
+        dependency_target = dependency_targets[dependency_name]
+        build_graph = build_graphs[dependency_name]
+        
+        @rebuild_evaluator.evaluate_build_graph(build_graph)
+        unpack_cached_artifacts(build_graph)
+        rebuild_if_needed(xcodebuild_executor, dependency_target, build_graph)
+        @injector.perform_outgoing_injection(build_graph, target)
       end
     end
 
     # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
     # @param [String] dependency_name
     #
-    def handle_dependency(target, dependency_name)
-      info("checking #{dependency_name}")
-
+    # @return [Xcodeproj::Project::Object::PBXNativeTarget]
+    #
+    def find_dependency_target(target, dependency_name)
       dependency_target = @native_target_finder.find_for_product_name(dependency_name)
       unless dependency_target
         raise Informative, "Target not found for #{dependency_name} of #{target.display_name}"
       end
 
-      xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.active_configuration.build_configuration,
-                                                                        dependency_target.platform_name,
-                                                                        config.settings.destination,
-                                                                        config.active_configuration.action,
-                                                                        config.active_configuration.xcodebuild_args)
-      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
-      graph = graph_builder.build_graph(target, dependency_target)
-
-      @rebuild_evaluator.evaluate_build_graph(graph)
-      unpack_cached_artifacts(graph)
-      rebuild_if_needed(xcodebuild_executor, dependency_target, graph)
-      @injector.perform_outgoing_injection(graph, target)
+      dependency_target
     end
 
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph

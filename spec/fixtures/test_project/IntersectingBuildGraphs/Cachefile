@@ -1,0 +1,13 @@
+workspace "IntersectingBuildGraphs" do
+  configuration "Debug" do
+    build_configuration "Debug"
+    action "build"
+  end
+
+  derived_data_path "build"
+
+  target "IntersectingBuildGraphs" do
+    cache "libDependency.a"
+    cache "libPods-IntersectingBuildGraphs.a"
+  end
+end

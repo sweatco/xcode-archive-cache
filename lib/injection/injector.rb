@@ -21,7 +21,7 @@ module XcodeArchiveCache
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
       def perform_internal_injection(graph)
-        inject_unpacked(graph.nodes)
+        inject_unpacked_and_rebuilt(graph.nodes)
         add_header_paths(graph.nodes)
         save_graph_projects(graph)
       end
@@ -103,11 +103,16 @@ module XcodeArchiveCache
 
       # @param [Array<XcodeArchiveCache::BuildGraph::Node>] nodes
       #
-      def inject_unpacked(nodes)
+      def inject_unpacked_and_rebuilt(nodes)
         cached_nodes = nodes.select { |node| node.state == :unpacked }
         cached_nodes.each do |node|
           headers_mover.prepare_headers_for_injection(node)
           modulemap_fixer.fix_modulemap(node)
+          add_as_prebuilt_to_dependents(node)
+        end
+
+        built_nodes = nodes.select { |node| node.state == :rebuilt_and_cached }
+        built_nodes.each do |node|
           add_as_prebuilt_to_dependents(node)
         end
       end
@@ -206,10 +211,14 @@ module XcodeArchiveCache
         if injected_modulemap_file_path
           modulemap_file_names = ["#{prebuilt_node.module_name}.modulemap", File.basename(prebuilt_node.modulemap_file_path)]
           build_flags_changer.fix_module_map_path(build_configuration, modulemap_file_names, injected_modulemap_file_path)
+
+          original_modulemap_path = prebuilt_node.modulemap_file_path
+          add_header_paths_to_target(dependent_target, [File.dirname(original_modulemap_path)])
         end
 
         artifact_location = storage.get_storage_path(prebuilt_node)
         build_flags_changer.add_library_search_path(build_configuration, artifact_location)
+        build_flags_changer.add_swift_include_path(build_configuration, artifact_location)
 
         if dependency_remover.is_linked(prebuilt_node, dependent_target)
           if dependent_target.product_type == Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]

@@ -2,6 +2,8 @@ module XcodeArchiveCache
   module Build
     class ProductExtractor
 
+      include XcodeArchiveCache::Logs
+
       # @param [String] configuration
       # @param [String] derived_data_path
       #
@@ -83,8 +85,22 @@ module XcodeArchiveCache
         # this one is generated during Swift compilation
         # so we need to cache it as well
         #
-        swift_objc_interface_header_path = built_node.swift_objc_interface_header_path
-        paths << swift_objc_interface_header_path if swift_objc_interface_header_path
+        swift_objc_interface_header_glob = get_swift_objc_interface_header_glob(built_node)
+        swift_objc_interface_header_path = Dir.glob(swift_objc_interface_header_glob).first
+        if swift_objc_interface_header_path
+          debug("using Swift-ObjC interface header #{swift_objc_interface_header_path}")
+          paths << swift_objc_interface_header_path
+        end
+
+        swiftmodule_glob = get_swiftmodule_glob(built_node)
+        if swiftmodule_glob
+          swiftmodule_path = Dir.glob(swiftmodule_glob).first
+          
+          if swiftmodule_path
+            debug("using swiftmodule #{swiftmodule_path}")
+            paths << swiftmodule_path
+          end
+        end
 
         paths
       end
@@ -97,9 +113,35 @@ module XcodeArchiveCache
         product_name = built_node.native_target.product_reference.name ?
                            built_node.native_target.product_reference.name :
                            built_node.native_target.product_reference.path
+        get_product_glob(File.basename(product_name))
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] built_node
+      #
+      # @return [String]
+      #
+      def get_swift_objc_interface_header_glob(built_node)
+        get_product_glob(File.basename(built_node.swift_objc_interface_header_file))
+      end
+
+      # @param [XcodeArchiveCache::BuildGraph::Node] built_node
+      #
+      # @return [String]
+      #
+      def get_swiftmodule_glob(built_node)
+        if built_node.module_name
+          get_product_glob(built_node.module_name + ".swiftmodule")
+        end
+      end
+
+      # @param [String] filename
+      #
+      # @return [String]
+      #
+      def get_product_glob(filename)
         File.join(derived_data_path,
                   "**",
-                  File.basename(product_name))
+                  filename)
       end
 
       # @param [String] framework_path

@@ -33,11 +33,19 @@ module XcodeArchiveCache
           headers_file_paths = node.native_target
                                    .headers_build_phase
                                    .files
+                                   .select { |file| file.settings && file.settings["ATTRIBUTES"].include?("Public") }
                                    .map { |header| get_real_path(header) }
                                    .uniq
           storage.store_default_headers(node, headers_file_paths)
 
           header_count += headers_file_paths.length
+        end
+
+        modulemap_file_path = node.modulemap_file_path
+        if modulemap_file_path && File.exist?(modulemap_file_path)
+          header_file_paths = enumerate_modulemap_headers(modulemap_file_path)
+          storage.store_default_headers(node, header_file_paths)
+          header_count += header_file_paths.length
 
           storage.store_modulemap(node)
         end
@@ -72,6 +80,27 @@ module XcodeArchiveCache
       #
       def get_destination_dir_path(node, build_phase)
         build_settings_interpolator.interpolate(build_phase.dst_path, node.build_settings)
+      end
+
+      # @param [String] modulemap_path
+      #
+      # @return [Array<String>]
+      #
+      def enumerate_modulemap_headers(modulemap_path)
+        modulemap_dir = File.dirname(modulemap_path)
+        modulemap_lines = File.read(modulemap_path).split("\n")
+        header_paths = []
+
+        modulemap_lines.each do |line|
+          if line.include?("header") && !line.include?("exclude")
+            header_name = line.split("\"")[1]
+            header_paths << File.join(modulemap_dir, header_name)
+          end
+        end
+
+        debug("modulemap header paths: #{header_paths}")
+
+        header_paths
       end
     end
   end
