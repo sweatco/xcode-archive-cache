@@ -1,0 +1,11 @@
+format_version: 1.3.1
+project_type: ios
+
+workflows:
+  test:
+    steps:
+      - script@1.1.6:
+          inputs:
+            - content: |
+                #!/bin/bash
+                bundle install --deployment && pod repo update && cd spec && ./integration_test.sh first

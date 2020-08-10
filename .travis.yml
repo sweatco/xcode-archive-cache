@@ -9,4 +9,4 @@ before_install:
   - bundle install --deployment && pod repo update
 install: true
 script:
-  - bundle exec rspec && cd spec && ./integration_test.sh
+  - bundle exec rspec && cd spec && ./integration_test.sh second
