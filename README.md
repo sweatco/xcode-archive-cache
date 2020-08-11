@@ -1,5 +1,4 @@
 # XcodeArchiveCache
-[![Build Status](https://travis-ci.com/sweatco/xcode-archive-cache.svg?branch=master)](https://travis-ci.com/sweatco/xcode-archive-cache)
 
 Native targets cache for Xcode archive builds.
 
