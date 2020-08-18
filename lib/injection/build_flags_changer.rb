@@ -7,9 +7,9 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [String] path
       #
-      def add_framework_search_path(build_configuration, path)
+      def replace_or_add_framework_search_path(build_configuration, target_name, path)
         debug("using framework search path #{path}")
-        add_flag_to_configuration(build_configuration, FRAMEWORK_SEARCH_PATHS_KEY, path_to_search_path(path))
+        replace_or_add_flag(build_configuration, [FRAMEWORK_SEARCH_PATHS_KEY], nil, [target_name], path_to_search_path(path), true)
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
@@ -66,9 +66,9 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [String] path
       #
-      def add_library_search_path(build_configuration, path)
+      def replace_or_add_library_search_path(build_configuration, target_name, path)
         debug("using library search path #{path}")
-        add_flag_to_configuration(build_configuration, LIBRARY_SEARCH_PATHS_KEY, path_to_search_path(path))
+        replace_or_add_flag(build_configuration, [LIBRARY_SEARCH_PATHS_KEY], nil, [target_name], path_to_search_path(path), true)
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration

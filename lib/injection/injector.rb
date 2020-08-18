@@ -191,7 +191,7 @@ module XcodeArchiveCache
         build_configuration = find_build_configuration(dependent_target)
 
         artifact_location = storage.get_storage_path(prebuilt_node)
-        build_flags_changer.add_framework_search_path(build_configuration, artifact_location)
+        build_flags_changer.replace_or_add_framework_search_path(build_configuration, prebuilt_node.native_target.name, artifact_location)
         build_flags_changer.add_framework_headers_iquote(build_configuration, artifact_location, prebuilt_node)
 
         if dependency_remover.is_linked(prebuilt_node, dependent_target)
@@ -219,7 +219,7 @@ module XcodeArchiveCache
         end
 
         artifact_location = storage.get_storage_path(prebuilt_node)
-        build_flags_changer.add_library_search_path(build_configuration, artifact_location)
+        build_flags_changer.replace_or_add_library_search_path(build_configuration, prebuilt_node.native_target.name, artifact_location)
         build_flags_changer.add_swift_include_path(build_configuration, artifact_location)
 
         if dependency_remover.is_linked(prebuilt_node, dependent_target)
