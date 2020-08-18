@@ -169,6 +169,9 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
       #
       def add_as_prebuilt_dependency(prebuilt_node, dependent_target)
+        target_identifier = get_target_identifier(dependent_target)
+        return if prebuilt_node.targets_injected_to.include?(target_identifier)
+
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
         unless prebuilt_node.has_acceptable_product?
@@ -180,6 +183,8 @@ module XcodeArchiveCache
         elsif prebuilt_node.has_static_library_product?
           add_as_prebuilt_static_lib(prebuilt_node, dependent_target)
         end
+
+        prebuilt_node.targets_injected_to.push(target_identifier)
 
         debug("done with #{prebuilt_node.name} for #{dependent_target.display_name}")
       end
@@ -260,6 +265,14 @@ module XcodeArchiveCache
       def remove_native_target_from_project(node)
         debug("deleting #{node.name} target")
         node.native_target.project.targets.delete(node.native_target)
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      #
+      # @return [String]
+      #
+      def get_target_identifier(target)
+        target.uuid + target.project.path.realpath.to_s
       end
     end
   end

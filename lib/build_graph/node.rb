@@ -34,6 +34,10 @@ module XcodeArchiveCache
       #
       attr_accessor :build_settings
 
+      # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]
+      #
+      attr_reader :targets_injected_to
+
       # @param [String] name
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] native_target
       # @param [Boolean] is_root
@@ -44,6 +48,7 @@ module XcodeArchiveCache
         @is_root = is_root
         @dependent = []
         @dependencies = []
+        @targets_injected_to = []
         @state = :unknown
       end
 
