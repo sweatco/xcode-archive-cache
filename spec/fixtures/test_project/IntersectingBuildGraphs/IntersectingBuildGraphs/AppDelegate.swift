@@ -9,12 +9,14 @@
 import UIKit
 import KeychainAccess
 import Dependency
+import GoogleDataTransportCCTSupport
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         let _ = Dependency()
         let _ = Keychain()
+        print(GDTCCTNetworkConnectionInfo.count)
         return true
     }
 

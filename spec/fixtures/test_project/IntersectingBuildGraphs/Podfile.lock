@@ -1,16 +1,32 @@
 PODS:
+  - GoogleDataTransport (6.2.1)
+  - GoogleDataTransportCCTSupport (3.2.0):
+    - GoogleDataTransport (~> 6.1)
+    - nanopb (~> 1.30905.0)
   - KeychainAccess (3.2.1)
+  - nanopb (1.30905.0):
+    - nanopb/decode (= 1.30905.0)
+    - nanopb/encode (= 1.30905.0)
+  - nanopb/decode (1.30905.0)
+  - nanopb/encode (1.30905.0)
 
 DEPENDENCIES:
+  - GoogleDataTransportCCTSupport (~> 3.2)
   - KeychainAccess (~> 3.1)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
+    - GoogleDataTransport
+    - GoogleDataTransportCCTSupport
     - KeychainAccess
+    - nanopb
 
 SPEC CHECKSUMS:
+  GoogleDataTransport: 9a8a16f79feffc7f42096743de2a7c4815e84020
+  GoogleDataTransportCCTSupport: 489c1265d2c85b68187a83a911913d190012158d
   KeychainAccess: d5470352939ced6d6f7fb51cb2e67aae51fc294f
+  nanopb: c43f40fadfe79e8b8db116583945847910cbabc9
 
-PODFILE CHECKSUM: fbc0958c5fb84d6aaf9e4f62096b1942e70e2736
+PODFILE CHECKSUM: 085189d2e4448905ecce1aef7f5d7ec738fb6f08
 
 COCOAPODS: 1.7.5

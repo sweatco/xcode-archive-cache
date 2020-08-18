@@ -5,6 +5,7 @@ workspace 'IntersectingBuildGraphs'
 
 def shared_pods
   pod 'KeychainAccess', '~> 3.1'
+  pod 'GoogleDataTransportCCTSupport', '~> 3.2'
 end
 
 target 'IntersectingBuildGraphs' do
