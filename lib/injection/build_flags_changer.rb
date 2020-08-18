@@ -103,16 +103,7 @@ module XcodeArchiveCache
         debug("using #{path}")
 
         settings_with_modulemaps = [OTHER_CFLAGS_KEY, OTHER_CPLUSPLUSFLAGS_KEY, OTHER_SWIFT_FLAGS_KEY]
-        settings_with_modulemaps.each do |setting|
-          replace_path(build_configuration.build_settings, setting, MODULE_MAP_FLAG, old_modulemap_names, path)
-        end
-
-        if build_configuration.base_configuration_reference
-          xcconfig_path = build_configuration.base_configuration_reference.real_path
-          project_dir = File.dirname(build_configuration.project.path)
-
-          replace_path_in_xcconfig_recursively(xcconfig_path, project_dir, settings_with_modulemaps, MODULE_MAP_FLAG, old_modulemap_names, path)
-        end
+        replace_or_add_flag(build_configuration, settings_with_modulemaps, MODULE_MAP_FLAG, old_modulemap_names, path_to_search_path(path), false)
       end
 
       private
@@ -244,43 +235,77 @@ module XcodeArchiveCache
         node.product_file_name.gsub(/^lib/, "-l").gsub(/\.a$/, "")
       end
 
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [Array<String>] setting_keys
+      # @param [String] flag_name
+      # @param [Array<String>] possible_old_values
+      # @param [String] new_value
+      #
+      def replace_or_add_flag(build_configuration, setting_keys, flag_name, possible_old_values, new_value, add_if_missing)
+        replaced = false
+
+        setting_keys.each do |setting|
+          replaced = replace_flag_value(build_configuration.build_settings, setting, flag_name, possible_old_values, new_value) || replaced
+        end
+
+        if build_configuration.base_configuration_reference
+          xcconfig_path = build_configuration.base_configuration_reference.real_path
+          project_dir = File.dirname(build_configuration.project.path)
+
+          replaced = replace_flag_value_in_xcconfig_recursively(xcconfig_path, project_dir, setting_keys, flag_name, possible_old_values, new_value) || replaced
+        end
+
+        if !replaced && add_if_missing
+          full_value = get_full_flag_value(flag_name, new_value)
+
+          setting_keys.each do |setting|
+            add_flag_to_configuration(build_configuration, setting, full_value)
+          end
+        end
+      end
+
       # @param [String] xcconfig_path
       # @param [String] project_dir
       # @param [Array<String>] setting_keys
       # @param [String] flag_name
-      # @param [Array<String>] old_paths
-      # @param [String] path
+      # @param [Array<String>] possible_old_values
+      # @param [String] new_value
       #
-      def replace_path_in_xcconfig_recursively(xcconfig_path, project_dir, setting_keys, flag_name, old_paths, path)
-        debug("changing #{old_paths} to #{path} in #{File.basename(xcconfig_path)}")
+      def replace_flag_value_in_xcconfig_recursively(xcconfig_path, project_dir, setting_keys, flag_name, possible_old_values, new_value)
+        debug("changing #{possible_old_values} to #{new_value} in #{File.basename(xcconfig_path)}")
         return unless File.exist?(xcconfig_path)
 
+        replaced = false
         xcconfig = Xcodeproj::Config.new(xcconfig_path)
 
         setting_keys.each do |key|
-          replace_path(xcconfig.attributes, key, flag_name, old_paths, path)
+          replaced = replace_flag_value(xcconfig.attributes, key, flag_name, possible_old_values, new_value) || replaced
         end
 
         xcconfig.save_as(Pathname.new(xcconfig_path))
 
         xcconfig.includes.each do |included_xcconfig|
           included_xcconfig_path = File.join(project_dir, included_xcconfig)
-          replace_path_in_xcconfig_recursively(included_xcconfig_path, project_dir, setting_keys, flag_name, old_paths, path)
+          replaced = replace_flag_value_in_xcconfig_recursively(included_xcconfig_path, project_dir, setting_keys, flag_name, possible_old_values, new_value) || replaced
         end
+
+        replaced
       end
 
       # @param [Hash] attributes
       # @param [String] setting_key
       # @param [String] flag_name
-      # @param [Array<String>] old_paths
-      # @param [String] path
+      # @param [Array<String>] possible_old_values
+      # @param [String] new_value
       #
-      def replace_path(attributes, setting_key, flag_name, old_paths, path)
+      def replace_flag_value(attributes, setting_key, flag_name, possible_old_values, new_value)
         build_settings = attributes[setting_key]
         return unless build_settings
 
+        replaced = false
         is_string = build_settings.is_a?(String)
         build_settings = build_settings.split(" ") if is_string
+        full_value = get_full_flag_value(flag_name, new_value)
 
         updated_settings = build_settings
                             .map { |line| line.split(" ") }
@@ -292,9 +317,10 @@ module XcodeArchiveCache
 
           updated_line = line
 
-          old_paths.each do |old_path|
-            if line.include?(old_path)
-              updated_line = "#{flag_name}\"#{path}\""
+          possible_old_values.each do |old_value|
+            if line.include?(old_value)
+              replaced = true
+              updated_line = full_value
               break
             end
           end
@@ -303,6 +329,11 @@ module XcodeArchiveCache
         end
 
         attributes[setting_key] = is_string ? updated_settings.join(" ") : updated_settings
+        replaced
+      end
+
+      def get_full_flag_value(flag_name, value)
+        "#{flag_name}#{value}"
       end
     end
   end
