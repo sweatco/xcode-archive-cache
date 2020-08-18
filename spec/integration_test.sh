@@ -209,7 +209,7 @@ set_pwd "$INTERSECTING_BUILD_GRAPHS_PROJECT_LOCATION"
 WORKSPACE="IntersectingBuildGraphs.xcworkspace"
 TARGET="IntersectingBuildGraphs"
 
-ALL_LIBS="libKeychainAccess.a|libPods-Dependency.a|libPods-IntersectingBuildGraphs.a|libDependency.a"
+ALL_LIBS="libKeychainAccess.a|libPods-Dependency.a|libPods-IntersectingBuildGraphs.a|libDependency.a|libnanopb.a|libGoogleDataTransportCCTSupport.a|libGoogleDataTransport.a"
 
 perform_full_clean && perform_app_test
 expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
