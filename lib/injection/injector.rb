@@ -210,6 +210,8 @@ module XcodeArchiveCache
         injected_modulemap_file_path = storage.get_modulemap_path(prebuilt_node)
         if injected_modulemap_file_path
           modulemap_file_names = ["#{prebuilt_node.module_name}.modulemap", File.basename(prebuilt_node.modulemap_file_path)]
+                                  .sort
+                                  .uniq
           build_flags_changer.fix_module_map_path(build_configuration, modulemap_file_names, injected_modulemap_file_path)
 
           original_modulemap_path = prebuilt_node.modulemap_file_path
