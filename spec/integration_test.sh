@@ -23,7 +23,7 @@ check_for_negative_result() {
 ROOT_PWD=$PWD
 TEST_PROJECT_LOCATION="$PWD/fixtures/test_project/Test"
 STATIC_LIB_MODULES_PROJECT_LOCATION="$PWD/fixtures/test_project/StaticLibModules"
-INTERSECING_BUILD_GRAPHS_PROJECT_LOCATION="$PWD/fixtures/test_project/IntersectingBuildGraphs"
+INTERSECTING_BUILD_GRAPHS_PROJECT_LOCATION="$PWD/fixtures/test_project/IntersectingBuildGraphs"
 
 IOS_DESTINATION="platform=iOS Simulator,name=iPhone 11,OS=latest"
 WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 5 - 44mm,OS=latest"
@@ -137,6 +137,11 @@ expect_libs_not_to_be_rebuilt() {
   done
 }
 
+expect_no_invalid_dirs_to_be_reported() {
+  grep -q "ld: directory not found for option" "$1"
+  check_for_negative_result "No invalid directories reported"
+}
+
 add_second_app_to_cachefile() {
   mv Cachefile_two_apps Cachefile
 }
@@ -200,7 +205,7 @@ update_another_static_library_string_and_test() {
   check_for_positive_result "Update test"
 }
 
-set_pwd "$INTERSECING_BUILD_GRAPHS_PROJECT_LOCATION"
+set_pwd "$INTERSECTING_BUILD_GRAPHS_PROJECT_LOCATION"
 WORKSPACE="IntersectingBuildGraphs.xcworkspace"
 TARGET="IntersectingBuildGraphs"
 
@@ -208,11 +213,15 @@ ALL_LIBS="libKeychainAccess.a|libPods-Dependency.a|libPods-IntersectingBuildGrap
 
 perform_full_clean && perform_app_test
 expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 clean_but_leave_build_cache && perform_app_test
 expect_libs_to_be_rebuilt "" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 set_pwd "$STATIC_LIB_MODULES_PROJECT_LOCATION"
 WORKSPACE="StaticLibModules.xcworkspace"
@@ -224,32 +233,42 @@ ALL_LIBS="liblottie-ios.a|libPods-StaticLibModules.a"
 #
 perform_full_clean && perform_app_test
 expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # remove main dependency cache, expecting only the main dependency to be rebuilt
 #
 clean_but_leave_build_cache && remove_main_dependency_cache && perform_app_test
 expect_libs_to_be_rebuilt "libPods-StaticLibModules.a" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # remove sub-dependency cache, expecting everything to be rebuilt
 #
 clean_but_leave_build_cache && remove_sub_dependency_cache && perform_app_test
 expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # expect static lib with module to be properly injected
 # when no rebuild is performed
 #
 clean_but_leave_build_cache && perform_app_test
 expect_libs_to_be_rebuilt "" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # expect static lib with module changes to propagate everywhere
 #
 clean_but_leave_build_cache && install_pods && update_static_lib_with_module_and_test && build_and_test_app
 expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 set_pwd "$TEST_PROJECT_LOCATION"
 WORKSPACE="Test.xcworkspace"
@@ -262,6 +281,8 @@ expect_bundles_to_be_rebuilt "$ALL_BUNDLES" "$CACHE_LOG_FILE"
 expect_bundles_not_to_be_rebuilt "$ALL_BUNDLES" "$XCODEBUILD_LOG_FILE"
 expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # add target with shared dependencies to cachefile
 # all dependencies are shared so only umbrella Pods framework should be rebuilt
@@ -271,6 +292,8 @@ expect_bundles_to_be_rebuilt "Pods_Test2.framework" "$CACHE_LOG_FILE"
 expect_bundles_not_to_be_rebuilt "$ALL_BUNDLES" "$XCODEBUILD_LOG_FILE"
 expect_libs_to_be_rebuilt "" "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # add sibling import, expecting changed library to be rebuilt
 #
@@ -280,6 +303,8 @@ expect_bundles_to_be_rebuilt "" "$CACHE_LOG_FILE"
 expect_bundles_not_to_be_rebuilt "$ALL_BUNDLES" "$XCODEBUILD_LOG_FILE"
 expect_libs_to_be_rebuilt "$LIBS_EXPECTED_TO_BE_REBUILT" "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # update single pod, expecting it to be rebuilt
 #
@@ -291,6 +316,8 @@ expect_bundles_to_be_rebuilt "$BUNDLES_EXPECTED_TO_BE_REBUILT" "$CACHE_LOG_FILE"
 expect_bundles_not_to_be_rebuilt "$ALL_BUNDLES" "$XCODEBUILD_LOG_FILE"
 expect_libs_to_be_rebuilt "" "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # update our own dependency code, expecting changes to propagate to the app
 #
@@ -303,6 +330,8 @@ expect_bundles_to_be_rebuilt "$BUNDLES_EXPECTED_TO_BE_REBUILT" "$CACHE_LOG_FILE"
 expect_bundles_not_to_be_rebuilt "$ALL_BUNDLES" "$XCODEBUILD_LOG_FILE"
 expect_libs_to_be_rebuilt "$LIBS_EXPECTED_TO_BE_REBUILT" "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # update bundle content, expecting changes to propagate to the app
 #
@@ -313,6 +342,8 @@ expect_bundles_to_be_rebuilt "$BUNDLES_EXPECTED_TO_BE_REBUILT" "$CACHE_LOG_FILE"
 expect_bundles_not_to_be_rebuilt "$ALL_BUNDLES" "$XCODEBUILD_LOG_FILE"
 expect_libs_to_be_rebuilt "" "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # ask for StaticDependency rebuild, expecting nothing to be rebuilt
 #
@@ -320,6 +351,8 @@ clean_but_leave_build_cache
 perform_static_dependency_test
 expect_bundles_to_be_rebuilt "" "$CACHE_LOG_FILE"
 expect_libs_to_be_rebuilt "" "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 
 # update another static library code, expecting changes to propagate to the app
 #
@@ -331,3 +364,5 @@ expect_bundles_to_be_rebuilt "" "$CACHE_LOG_FILE"
 expect_bundles_not_to_be_rebuilt "$ALL_BUNDLES" "$XCODEBUILD_LOG_FILE"
 expect_libs_to_be_rebuilt "$LIBS_EXPECTED_TO_BE_REBUILT" "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
+expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
