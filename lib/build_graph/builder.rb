@@ -67,7 +67,11 @@ module XcodeArchiveCache
         node = ALL_NODES.select {|node| node.native_target.uuid == target.uuid && node.native_target.project == target.project}.first
         if node
           debug("already traversed this one")
-          graph.add_multiple_nodes(node.subgraph) unless graph.nodes.include?(node)
+          unless graph.nodes.include?(node)
+            nodes_to_add = node.subgraph.select {|subgraph_node| !graph.nodes.include?(subgraph_node)}
+            graph.add_multiple_nodes(nodes_to_add)
+          end
+
           return node
         else
           debug("adding new node")
