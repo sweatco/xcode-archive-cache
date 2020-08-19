@@ -19,7 +19,9 @@ module XcodeArchiveCache
       #
       def list_product_contents(built_node)
         file_paths = list_products(built_node)
-        file_paths.select { |path| File.exist?(path) }.map { |path| File.realpath(path) }
+        file_paths
+          .select { |path| File.exist?(path) }
+          .map { |path| File.realpath(path) }
       end
 
       private
@@ -102,6 +104,16 @@ module XcodeArchiveCache
           end
         end
 
+        modulemap_glob = get_modulemap_glob(built_node)
+        if modulemap_glob
+          modulemap_path = Dir.glob(modulemap_glob).first
+
+          if modulemap_path
+            debug("using modulemap #{modulemap_path}")
+            paths << modulemap_path
+          end
+        end
+
         paths
       end
 
@@ -134,14 +146,31 @@ module XcodeArchiveCache
         end
       end
 
-      # @param [String] filename
+      # @param [XcodeArchiveCache::BuildGraph::Node] built_node
       #
       # @return [String]
       #
-      def get_product_glob(filename)
+      def get_modulemap_glob(built_node)
+        resulting_modulemap_file_name = built_node.resulting_modulemap_file_name
+        if resulting_modulemap_file_name
+          get_product_glob(resulting_modulemap_file_name)
+        else
+          modulemap_file_path = built_node.original_modulemap_file_path
+          if modulemap_file_path && File.exist?(modulemap_file_path)
+            modulemap_file_name = File.basename(modulemap_file_path)
+            get_product_glob(modulemap_file_name)
+          end
+        end
+      end
+
+      # @param [String] file_name
+      #
+      # @return [String]
+      #
+      def get_product_glob(file_name)
         File.join(derived_data_path,
                   "**",
-                  filename)
+                  file_name)
       end
 
       # @param [String] framework_path

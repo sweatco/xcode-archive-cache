@@ -23,8 +23,8 @@ module XcodeArchiveCache
       # @param [String] path
       # @param [Array<String>] file_paths
       #
-      def store_headers(node, path, file_paths)
-        storage_path = get_full_header_storage_path(path)
+      def store_headers(node, path, file_paths, save_path = true)
+        storage_path = Pathname.new(path).absolute? ? path : get_full_header_storage_path(path)
 
         unless File.exist?(storage_path)
           FileUtils.mkdir_p(storage_path)
@@ -34,7 +34,7 @@ module XcodeArchiveCache
           FileUtils.cp(file_path, get_stored_file_path(storage_path, file_path))
         end
 
-        save_header_storage_path(storage_path, node)
+        save_header_storage_path(storage_path, node) if save_path
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
@@ -44,13 +44,8 @@ module XcodeArchiveCache
         store_headers(node, get_default_headers_storage_path(node), file_paths)
       end
 
-      # @param [XcodeArchiveCache::BuildGraph::Node] node
-      #
-      def store_modulemap(node)
-        modulemap_file_path = node.modulemap_file_path
-        if modulemap_file_path && File.exist?(modulemap_file_path)
-          store_headers(node, get_default_headers_storage_path(node), [modulemap_file_path])
-        end
+      def store_modulemap_headers(node, file_paths)
+        store_headers(node, get_storage_path(node), file_paths, false)
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node
@@ -58,11 +53,11 @@ module XcodeArchiveCache
       # @return [String]
       #
       def get_modulemap_path(node)
-        modulemap_file_path = node.modulemap_file_path
-        return if modulemap_file_path == nil
+        modulemap_file_name = node.resulting_modulemap_file_name
+        return if modulemap_file_name == nil
 
-        storage_path = get_full_header_storage_path(get_default_headers_storage_path(node))
-        stored_modulemap_file_path = get_stored_file_path(storage_path, modulemap_file_path)
+        storage_path = get_storage_path(node)
+        stored_modulemap_file_path = get_stored_file_path(storage_path, modulemap_file_name)
         File.exist?(stored_modulemap_file_path) ? stored_modulemap_file_path : nil
       end
 

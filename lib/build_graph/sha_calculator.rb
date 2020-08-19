@@ -2,6 +2,10 @@ module XcodeArchiveCache
   module BuildGraph
     class NodeShaCalculator
 
+      def initialize
+        @own_sha = calculate_own_sources_sha
+      end
+
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       def calculate(node)
@@ -24,6 +28,20 @@ module XcodeArchiveCache
 
       private
 
+      # @return [String]
+      #
+      attr_reader :own_sha
+
+      # @return [String]
+      #
+      def calculate_own_sources_sha
+        root = Pathname.new(File.expand_path('../', File.dirname(__FILE__)))
+        source_file_glob = File.join(root.realpath.to_s, "**", "*.rb")
+        source_file_paths = Dir.glob(source_file_glob)
+
+        calculate_sha(source_file_paths)
+      end
+
       # @param [XcodeArchiveCache::BuildGraph::Node] node
       #
       # @return [Array<String>]
@@ -36,7 +54,7 @@ module XcodeArchiveCache
           inputs << list_build_phase_inputs(build_phase)
         end
 
-        modulemap_file_path = node.modulemap_file_path
+        modulemap_file_path = node.original_modulemap_file_path
         inputs << modulemap_file_path if modulemap_file_path
 
         # file path order should not affect evaluation result
@@ -74,7 +92,7 @@ module XcodeArchiveCache
       # @param [Array<String>] dependency_shas
       #
       def save_auxiliary_data(build_settings, dependency_shas, tempfile)
-        file_contents = build_settings + dependency_shas.join("\n")
+        file_contents = build_settings + dependency_shas.join("\n") + "\nXCODE-ARCHIVE-CACHE: #{own_sha}\n"
         tempfile << file_contents
         tempfile.flush
       end

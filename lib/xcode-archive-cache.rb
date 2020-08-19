@@ -40,12 +40,15 @@ require 'build_settings/parser'
 
 require 'injection/injector'
 require 'injection/pods_script_fixer'
-require 'injection/modulemap_fixer'
 require 'injection/build_flags_changer'
 require 'injection/dependency_remover'
 require 'injection/headers_mover'
 require 'injection/storage'
 require 'injection/framework_embedder'
+
+require 'modulemap/file_handler'
+require 'modulemap/header_path_extractor'
+require 'modulemap/header_path_fixer'
 
 require 'runner/runner'
 

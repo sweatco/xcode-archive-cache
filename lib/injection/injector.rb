@@ -14,7 +14,7 @@ module XcodeArchiveCache
         @dependency_remover = DependencyRemover.new
         @build_flags_changer = BuildFlagsChanger.new
         @pods_fixer = PodsScriptFixer.new
-        @modulemap_fixer = ModulemapFixer.new(storage)
+        @modulemap_fixer = XcodeArchiveCache::Modulemap::HeaderPathFixer.new(storage)
         @framework_embedder = FrameworkEmbedder.new
       end
 
@@ -214,12 +214,10 @@ module XcodeArchiveCache
 
         injected_modulemap_file_path = storage.get_modulemap_path(prebuilt_node)
         if injected_modulemap_file_path
-          modulemap_file_names = ["#{prebuilt_node.module_name}.modulemap", File.basename(prebuilt_node.modulemap_file_path)]
-                                  .sort
-                                  .uniq
+          modulemap_file_names = [prebuilt_node.resulting_modulemap_file_name]
           build_flags_changer.fix_module_map_path(build_configuration, modulemap_file_names, injected_modulemap_file_path)
 
-          original_modulemap_path = prebuilt_node.modulemap_file_path
+          original_modulemap_path = prebuilt_node.original_modulemap_file_path
           add_header_paths_to_target(dependent_target, [File.dirname(original_modulemap_path)])
         end
 
