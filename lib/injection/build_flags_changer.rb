@@ -7,9 +7,9 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [String] path
       #
-      def add_framework_search_path(build_configuration, path)
+      def replace_or_add_framework_search_path(build_configuration, target_name, path)
         debug("using framework search path #{path}")
-        add_flag_to_configuration(build_configuration, FRAMEWORK_SEARCH_PATHS_KEY, path_to_search_path(path))
+        replace_or_add_flag(build_configuration, [FRAMEWORK_SEARCH_PATHS_KEY], nil, [target_name], path_to_search_path(path), true)
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
@@ -66,9 +66,9 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [String] path
       #
-      def add_library_search_path(build_configuration, path)
+      def replace_or_add_library_search_path(build_configuration, target_name, path)
         debug("using library search path #{path}")
-        add_flag_to_configuration(build_configuration, LIBRARY_SEARCH_PATHS_KEY, path_to_search_path(path))
+        replace_or_add_flag(build_configuration, [LIBRARY_SEARCH_PATHS_KEY], nil, [target_name], path_to_search_path(path), true)
       end
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
@@ -100,15 +100,10 @@ module XcodeArchiveCache
       # @param [String] path
       #
       def fix_module_map_path(build_configuration, old_modulemap_names, path)
-        replace_module_map_flag(build_configuration.build_settings, OTHER_CFLAGS_KEY, old_modulemap_names, path)
-        replace_module_map_flag(build_configuration.build_settings, OTHER_CPLUSPLUSFLAGS_KEY, old_modulemap_names, path)
-        replace_module_map_flag(build_configuration.build_settings, OTHER_SWIFT_FLAGS_KEY, old_modulemap_names, path)
+        debug("using #{path}")
 
-        if build_configuration.base_configuration_reference
-          xcconfig_path = build_configuration.base_configuration_reference.real_path
-          project_dir = File.dirname(build_configuration.project.path)
-          replace_module_map_path_recursively(xcconfig_path, project_dir, old_modulemap_names, path)
-        end
+        settings_with_modulemaps = [OTHER_CFLAGS_KEY, OTHER_CPLUSPLUSFLAGS_KEY, OTHER_SWIFT_FLAGS_KEY]
+        replace_or_add_flag(build_configuration, settings_with_modulemaps, MODULE_MAP_FLAG, old_modulemap_names, path_to_search_path(path), false)
       end
 
       private
@@ -123,6 +118,8 @@ module XcodeArchiveCache
       OTHER_SWIFT_FLAGS_KEY = "OTHER_SWIFT_FLAGS"
       SWIFT_INCLUDE_PATHS_KEY = "SWIFT_INCLUDE_PATHS"
       INHERITED_SETTINGS_VALUE = "$(inherited)"
+
+      MODULE_MAP_FLAG = "-fmodule-map-file="
 
       # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
       # @param [String] flag
@@ -238,73 +235,106 @@ module XcodeArchiveCache
         node.product_file_name.gsub(/^lib/, "-l").gsub(/\.a$/, "")
       end
 
-      # @param [Hash] build_settings
-      # @param [String] flags_key
-      # @param [Array<String>] old_modulemap_names
-      # @param [String] path
+      # @param [Xcodeproj::Project::Object::XCBuildConfiguration] build_configuration
+      # @param [Array<String>] setting_keys
+      # @param [String] flag_name
+      # @param [Array<String>] possible_old_values
+      # @param [String] new_value
       #
-      def replace_module_map_flag(build_settings, flags_key, old_modulemap_names, path)
-        flags = build_settings[flags_key]
-        if flags
-          build_settings[flags_key] = replace_module_map_path(flags, old_modulemap_names, path)
+      def replace_or_add_flag(build_configuration, setting_keys, flag_name, possible_old_values, new_value, add_if_missing)
+        replaced = false
+
+        setting_keys.each do |setting|
+          replaced = replace_flag_value(build_configuration.build_settings, setting, flag_name, possible_old_values, new_value) || replaced
+        end
+
+        if build_configuration.base_configuration_reference
+          xcconfig_path = build_configuration.base_configuration_reference.real_path
+          project_dir = File.dirname(build_configuration.project.path)
+
+          replaced = replace_flag_value_in_xcconfig_recursively(xcconfig_path, project_dir, setting_keys, flag_name, possible_old_values, new_value) || replaced
+        end
+
+        if !replaced && add_if_missing
+          full_value = get_full_flag_value(flag_name, new_value)
+
+          setting_keys.each do |setting|
+            add_flag_to_configuration(build_configuration, setting, full_value)
+          end
         end
       end
 
-      MODULE_MAP_FLAG = "-fmodule-map-file="
-
       # @param [String] xcconfig_path
       # @param [String] project_dir
-      # @param [Array<String>] old_modulemap_names
-      # @param [String] path
+      # @param [Array<String>] setting_keys
+      # @param [String] flag_name
+      # @param [Array<String>] possible_old_values
+      # @param [String] new_value
       #
-      def replace_module_map_path_recursively(xcconfig_path, project_dir, old_modulemap_names, path)
-        debug("changing modulemap path in #{xcconfig_path}")
+      def replace_flag_value_in_xcconfig_recursively(xcconfig_path, project_dir, setting_keys, flag_name, possible_old_values, new_value)
+        debug("changing #{possible_old_values} to #{new_value} in #{File.basename(xcconfig_path)}")
         return unless File.exist?(xcconfig_path)
 
+        replaced = false
         xcconfig = Xcodeproj::Config.new(xcconfig_path)
 
-        replace_module_map_flag(xcconfig.attributes, OTHER_CFLAGS_KEY, old_modulemap_names, path)
-        replace_module_map_flag(xcconfig.attributes, OTHER_CPLUSPLUSFLAGS_KEY, old_modulemap_names, path)
-        replace_module_map_flag(xcconfig.attributes, OTHER_SWIFT_FLAGS_KEY, old_modulemap_names, path)
+        setting_keys.each do |key|
+          replaced = replace_flag_value(xcconfig.attributes, key, flag_name, possible_old_values, new_value) || replaced
+        end
 
         xcconfig.save_as(Pathname.new(xcconfig_path))
 
         xcconfig.includes.each do |included_xcconfig|
           included_xcconfig_path = File.join(project_dir, included_xcconfig)
-          replace_module_map_path_recursively(included_xcconfig_path, project_dir, old_modulemap_names, path)
+          replaced = replace_flag_value_in_xcconfig_recursively(included_xcconfig_path, project_dir, setting_keys, flag_name, possible_old_values, new_value) || replaced
         end
+
+        replaced
       end
 
-      # @param [String] flags
-      # @param [Array<String>] old_modulemap_names
-      # @param [String] path
+      # @param [Hash] attributes
+      # @param [String] setting_key
+      # @param [String] flag_name
+      # @param [Array<String>] possible_old_values
+      # @param [String] new_value
       #
-      # @return [String]
-      #
-      def replace_module_map_path(flags, old_modulemap_names, path)
-        return if flags == nil
+      def replace_flag_value(attributes, setting_key, flag_name, possible_old_values, new_value)
+        build_settings = attributes[setting_key]
+        return unless build_settings
 
-        is_flags_string = flags.is_a?(String)
-        flags = flags.split(" ") if is_flags_string
-        updated_flags = flags
-                            .map { |flags_line| flags_line.split(" ") }
+        replaced = false
+        is_string = build_settings.is_a?(String)
+        build_settings = build_settings.split(" ") if is_string
+        full_value = get_full_flag_value(flag_name, new_value)
+        old_value_regexps = possible_old_values.map { |value| Regexp.new("#{value}\"*$") }
+
+        updated_settings = build_settings
+                            .map { |line| line.split(" ") }
                             .flatten
                             .map do |line|
+          if flag_name
+            next line unless line.include?(flag_name)
+          end
+
           updated_line = line
 
-          if line.include?(MODULE_MAP_FLAG)
-            old_modulemap_names.each do |name|
-              if line.include?(name)
-                updated_line = "#{MODULE_MAP_FLAG}\"#{path}\""
-                break
-              end
+          old_value_regexps.each do |regexp|
+            if regexp.match?(line)
+              replaced = true
+              updated_line = full_value
+              break
             end
           end
 
           updated_line
         end
 
-        is_flags_string ? updated_flags.join(" ") : updated_flags
+        attributes[setting_key] = is_string ? updated_settings.join(" ") : updated_settings
+        replaced
+      end
+
+      def get_full_flag_value(flag_name, value)
+        "#{flag_name}#{value}"
       end
     end
   end
