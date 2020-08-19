@@ -96,11 +96,21 @@ module XcodeArchiveCache
 
       # @return [String]
       #
-      def modulemap_file_path
-        modulemap_file = build_settings[XcodeArchiveCache::BuildSettings::MODULEMAP_FILE_KEY]
+      def original_modulemap_file_path
+        modulemap_file = modulemap_file_name
         return unless modulemap_file
 
         Pathname.new(modulemap_file).absolute? ? modulemap_file : File.join(File.dirname(native_target.project.path), modulemap_file)
+      end
+
+      # @return [String]
+      #
+      def resulting_modulemap_file_name
+        if module_name
+          module_name + ".modulemap"
+        else
+          File.basename(modulemap_file_name)
+        end
       end
 
       # @return [String]
@@ -121,6 +131,12 @@ module XcodeArchiveCache
       #
       def module_name
         build_settings[XcodeArchiveCache::BuildSettings::PRODUCT_MODULE_NAME_KEY]
+      end
+
+      # @return [String]
+      #
+      def modulemap_file_name
+        build_settings[XcodeArchiveCache::BuildSettings::MODULEMAP_FILE_KEY]
       end
 
       # @return [Array<Node>]
