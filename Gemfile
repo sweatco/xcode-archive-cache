@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'cocoapods', '~> 1.7'
-gem 'rubyzip', '~> 1.2'
+gem 'rubyzip', '~> 2.0'
 gem 'xcpretty', '~> 0.3'
 gem 'claide', '~> 1.0'
 

@@ -58,7 +58,7 @@ install_pods() {
 }
 
 inject_cache() {
-  "$ROOT_PWD/../bin/xcode-archive-cache" inject --destination="$TEST_DESTINATION" --configuration=Debug --storage="$BUILD_CACHE_DIR" --log-level=verbose | tee "$CACHE_LOG_FILE"
+  bundle exec ruby "$ROOT_PWD/../bin/xcode-archive-cache" inject --destination="$TEST_DESTINATION" --configuration=Debug --storage="$BUILD_CACHE_DIR" --log-level=verbose | tee "$CACHE_LOG_FILE"
   check_for_positive_result "Build and cache dependencies"
 }
 
