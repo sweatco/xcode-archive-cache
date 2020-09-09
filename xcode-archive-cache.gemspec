@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.date = Date.today
 
   spec.add_runtime_dependency "xcodeproj",  ">= 1.10", "< 2.0"
-  spec.add_runtime_dependency "rubyzip",    ">= 1.3", "< 2.0"
+  spec.add_runtime_dependency "rubyzip",    ">= 2.0", "< 3.0"
   spec.add_runtime_dependency "xcpretty",   "~> 0.3"
   spec.add_runtime_dependency "claide",     "~> 1.0"
 

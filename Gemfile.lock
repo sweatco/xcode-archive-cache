@@ -71,7 +71,7 @@ GEM
       rspec-support (~> 3.7.0)
     rspec-support (3.7.1)
     ruby-macho (1.4.0)
-    rubyzip (1.2.2)
+    rubyzip (2.3.0)
     thread_safe (0.3.6)
     tzinfo (1.2.5)
       thread_safe (~> 0.1)
@@ -91,7 +91,7 @@ DEPENDENCIES
   claide (~> 1.0)
   cocoapods (~> 1.7)
   rspec (~> 3.7)
-  rubyzip (~> 1.2)
+  rubyzip (~> 2.0)
   xcpretty (~> 0.3)
 
 BUNDLED WITH
