@@ -15,7 +15,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         reportedClassNameLabel.text = ClassNameReporter.reportedClassName()
-        SomethingWithLottie.do()
+        SomethingWithLottie.doSomething()
     }
 }
 

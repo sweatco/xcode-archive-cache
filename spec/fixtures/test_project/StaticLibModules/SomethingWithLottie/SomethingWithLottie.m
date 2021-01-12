@@ -8,12 +8,10 @@
 
 #import "SomethingWithLottie.h"
 
-@import Lottie;
-
 @implementation SomethingWithLottie
 
-+(void) doSomethingWithLottie {
-    NSLog(@"%@", LottieView.description);
++(void) doSomething {
+    NSLog(@"hey");
 }
 
 @end
