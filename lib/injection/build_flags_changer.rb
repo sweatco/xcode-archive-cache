@@ -306,7 +306,7 @@ module XcodeArchiveCache
         is_string = build_settings.is_a?(String)
         build_settings = build_settings.split(" ") if is_string
         full_value = get_full_flag_value(flag_name, new_value)
-        old_value_regexps = possible_old_values.map { |value| Regexp.new("#{value}\"*$") }
+        old_value_regexps = possible_old_values.map { |value| Regexp.new("/#{value}\"*$") }
 
         updated_settings = build_settings
                             .map { |line| line.split(" ") }
