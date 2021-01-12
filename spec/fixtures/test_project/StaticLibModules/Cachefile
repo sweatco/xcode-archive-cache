@@ -8,5 +8,6 @@ workspace "StaticLibModules" do
 
   target "StaticLibModules" do
     cache "libPods-StaticLibModules.a"
+    cache "libSomethingWithLottie.a"
   end
 end
