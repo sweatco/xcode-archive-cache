@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SomethingWithLottie
 
 class ViewController: UIViewController {
     @IBOutlet var reportedClassNameLabel: UILabel!
@@ -14,6 +15,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         reportedClassNameLabel.text = ClassNameReporter.reportedClassName()
+        SomethingWithLottie.doSomething()
     }
 }
 

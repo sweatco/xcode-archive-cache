@@ -227,7 +227,7 @@ set_pwd "$STATIC_LIB_MODULES_PROJECT_LOCATION"
 WORKSPACE="StaticLibModules.xcworkspace"
 TARGET="StaticLibModules"
 
-ALL_LIBS="liblottie-ios.a|libPods-StaticLibModules.a"
+ALL_LIBS="liblottie-ios.a|libPods-StaticLibModules.a|libSomethingWithLottie.a"
 
 # expect static lib with module to be properly injected
 #
@@ -248,7 +248,7 @@ expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 # remove sub-dependency cache, expecting everything to be rebuilt
 #
 clean_but_leave_build_cache && remove_sub_dependency_cache && perform_app_test
-expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
+expect_libs_to_be_rebuilt "liblottie-ios.a|libPods-StaticLibModules.a" "$CACHE_LOG_FILE"
 expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
 expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
@@ -265,7 +265,7 @@ expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"
 # expect static lib with module changes to propagate everywhere
 #
 clean_but_leave_build_cache && install_pods && update_static_lib_with_module_and_test && build_and_test_app
-expect_libs_to_be_rebuilt "$ALL_LIBS" "$CACHE_LOG_FILE"
+expect_libs_to_be_rebuilt "liblottie-ios.a|libPods-StaticLibModules.a" "$CACHE_LOG_FILE"
 expect_no_invalid_dirs_to_be_reported "$CACHE_LOG_FILE"
 expect_libs_not_to_be_rebuilt "$ALL_LIBS" "$XCODEBUILD_LOG_FILE"
 expect_no_invalid_dirs_to_be_reported "$XCODEBUILD_LOG_FILE"

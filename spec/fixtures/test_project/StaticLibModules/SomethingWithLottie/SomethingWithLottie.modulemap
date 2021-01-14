@@ -1,0 +1,6 @@
+module SomethingWithLottie {
+  umbrella header "SomethingWithLottie.h"
+
+  export *
+  module * { export * }
+}
