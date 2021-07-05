@@ -45,6 +45,7 @@ require 'injection/dependency_remover'
 require 'injection/headers_mover'
 require 'injection/storage'
 require 'injection/framework_embedder'
+require 'injection/pods_xcframework_fixer'
 
 require 'modulemap/file_handler'
 require 'modulemap/header_path_extractor'
@@ -55,6 +56,9 @@ require 'runner/runner'
 require 'shell/executor'
 
 require 'xcodebuild/executor'
+
+require 'extensions/target'
+require 'extensions/build_configuration'
 
 module XcodeArchiveCache
   class Informative < StandardError

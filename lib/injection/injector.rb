@@ -136,7 +136,7 @@ module XcodeArchiveCache
 
         debug("adding #{paths} to #{target.display_name}")
 
-        build_configuration = find_build_configuration(target)
+        build_configuration = target.find_build_configuration(configuration_name)
         paths.each do |path|
           build_flags_changer.add_headers_search_path(build_configuration, path)
           build_flags_changer.add_iquote_path(build_configuration, path)
@@ -193,7 +193,7 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
       #
       def add_as_prebuilt_framework(prebuilt_node, dependent_target)
-        build_configuration = find_build_configuration(dependent_target)
+        build_configuration = dependent_target.find_build_configuration(configuration_name)
 
         artifact_location = storage.get_storage_path(prebuilt_node)
         build_flags_changer.replace_or_add_framework_search_path(build_configuration, prebuilt_node.native_target.name, artifact_location)
@@ -210,7 +210,7 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] dependent_target
       #
       def add_as_prebuilt_static_lib(prebuilt_node, dependent_target)
-        build_configuration = find_build_configuration(dependent_target)
+        build_configuration = dependent_target.find_build_configuration(configuration_name)
 
         injected_modulemap_file_path = storage.get_modulemap_path(prebuilt_node)
         if injected_modulemap_file_path
@@ -234,17 +234,6 @@ module XcodeArchiveCache
         end
 
         dependency_remover.remove_dependency(prebuilt_node, dependent_target)
-      end
-
-      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
-      #
-      def find_build_configuration(target)
-        build_configuration = target.build_configurations.select { |configuration| configuration.name == configuration_name }.first
-        unless build_configuration
-          raise Informative, "#{configuration_name} build configuration not found on target #{target.display_name}"
-        end
-
-        build_configuration
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target

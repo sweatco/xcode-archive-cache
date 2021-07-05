@@ -25,8 +25,39 @@ module XcodeArchiveCache
 
       # @param [String] platform_name
       #
+      # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]
+      #
       def set_platform_name_filter(platform_name)
         @platform_name = platform_name
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      #
+      # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]
+      #
+      def find_native_dependencies(target)
+        direct_dependencies = target
+                                .dependencies
+                                .map {|dependency| find_for_dependency(dependency)}
+        linked_dependencies = find_linked_dependencies(target)
+        join(direct_dependencies, linked_dependencies)
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXAbstractTarget] target
+      #
+      # @return [Array<Xcodeproj::Project::Object::PBXAbstractTarget>]
+      #
+      def find_all_dependencies(target)
+        direct_dependencies = target
+                                .dependencies
+                                .map {|dependency| find_any_for_dependency(dependency)}
+        linked_dependencies = []
+        
+        if target.is_a?(Xcodeproj::Project::Object::PBXNativeTarget) 
+          linked_dependencies = find_linked_dependencies(target)
+        end
+
+        join(direct_dependencies, linked_dependencies)
       end
 
       # @param [Xcodeproj::Project::Object::PBXTargetDependency] dependency
@@ -35,8 +66,12 @@ module XcodeArchiveCache
       #
       def find_for_dependency(dependency)
         # targets from embedded projects are proxied
-        target = dependency.target ? dependency.target : dependency.target_proxy.proxied_object
+        target = find_any_for_dependency(dependency)
         target.is_a?(Xcodeproj::Project::Object::PBXNativeTarget) ? target : nil
+      end
+
+      def find_any_for_dependency(dependency)
+        dependency.target ? dependency.target : dependency.target_proxy.proxied_object
       end
 
       # @param [Xcodeproj::Project::Object::PBXBuildFile] file
@@ -78,6 +113,8 @@ module XcodeArchiveCache
 
       # @param [String] product_name
       #
+      # @return [Xcodeproj::Project::Object::PBXNativeTarget]
+      #
       def find_for_product_name(product_name)
         all_targets.select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
             .first
@@ -105,6 +142,28 @@ module XcodeArchiveCache
                               .map {|file_ref| Xcodeproj::Project.open(file_ref.real_path)}
         subnested_projects = nested_projects.map {|nested_project| unnest(nested_project)}.flatten
         [project] + nested_projects + subnested_projects
+      end
+
+      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
+      #
+      # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]
+      #
+      def find_linked_dependencies(target)
+        target
+          .frameworks_build_phase
+          .files
+          .map {|file| find_for_file(file)}
+      end
+
+      # @param [Array<Xcodeproj::Project::Object::PBXAbstractTarget>] direct_dependencies
+      # @params [Array<Xcodeproj::Project::Object::PBXNativeTarget>] linked_dependencies
+      #
+      # @return [Array<Xcodeproj::Project::Object::PBXAbstractTarget>]
+      #
+      def join(direct_dependencies, linked_dependencies)
+        (direct_dependencies + linked_dependencies)
+          .compact
+          .uniq(&:equatable_identifier)
       end
 
       # @param [String] uuid
