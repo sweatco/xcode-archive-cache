@@ -83,11 +83,7 @@ module XcodeArchiveCache
         dependencies = []
         target_stack.push(display_name)
 
-        dependency_targets = target.dependencies.map {|dependency| native_target_finder.find_for_dependency(dependency)} +
-            target.frameworks_build_phase.files.map {|file| native_target_finder.find_for_file(file)}
-
-        # PBXNativeTarget has no custom equality check
-        deduplicated_targets = dependency_targets.compact.uniq {|dependency_target| dependency_target.uuid + dependency_target.display_name}
+        deduplicated_targets = native_target_finder.find_native_dependencies(target)
         debug("dependency targets: #{deduplicated_targets.map(&:display_name)}")
 
         deduplicated_targets.each do |dependency_target|

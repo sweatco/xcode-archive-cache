@@ -31,6 +31,18 @@ module XcodeArchiveCache
         result
       end
 
+      # @param [String] command
+      # @param [Hash] env
+      #
+      # @return [Boolean] true if command succeeded and returned 0, false otherwise
+      #
+      def execute_with_env(command, env)
+        result = system(env, "set -x && '#{command}'")
+
+        return false if result == nil
+        result
+      end
+
       private
 
       # @param [String] command

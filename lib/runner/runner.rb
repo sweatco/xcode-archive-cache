@@ -86,6 +86,10 @@ module XcodeArchiveCache
         build_graphs[dependency_name] = graph_builder.build_graph(target, dependency_target)
       end
 
+      pods_xcframeworks_fixer = XcodeArchiveCache::Injection::PodsXCFrameworkFixer.new(@injection_storage, @native_target_finder, config.active_configuration.build_configuration)
+      any_build_settings = build_graphs[target_config.dependencies[0]].dependent_build_settings
+      pods_xcframeworks_fixer.fix(target, any_build_settings)
+
       target_config.dependencies.each do |dependency_name|
         info("processing #{dependency_name}")
 
