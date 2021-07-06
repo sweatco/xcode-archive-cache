@@ -3,9 +3,14 @@ module XcodeArchiveCache
     class NativeTargetFinder
 
       # @param [Array<Xcodeproj::Project>] projects
+      # @param [String] build_configuration_name
       #
-      def initialize(projects)
+      def initialize(projects, build_configuration_name)
         @all_targets = extract_targets(projects)
+        @build_configuration_name = build_configuration_name
+        @interpolator = XcodeArchiveCache::BuildSettings::StringInterpolator.new
+
+        setup_product_name_to_target_mapping
       end
 
       # @param [Array<Xcodeproj::Project>] projects
@@ -71,7 +76,8 @@ module XcodeArchiveCache
       end
 
       def find_any_for_dependency(dependency)
-        dependency.target ? dependency.target : dependency.target_proxy.proxied_object
+        target = dependency.target ? dependency.target : dependency.target_proxy.proxied_object
+        target && target.platform_name == platform_name ? target : nil
       end
 
       # @param [Xcodeproj::Project::Object::PBXBuildFile] file
@@ -116,8 +122,13 @@ module XcodeArchiveCache
       # @return [Xcodeproj::Project::Object::PBXNativeTarget]
       #
       def find_for_product_name(product_name)
-        all_targets.select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
-            .first
+        canonical = all_targets
+          .select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
+          .first
+        
+        parsed = @product_name_to_target[product_name]
+
+        canonical ? canonical : parsed
       end
 
       private
@@ -129,6 +140,34 @@ module XcodeArchiveCache
       # @return [String]
       #
       attr_accessor :platform_name
+
+      # @return [String]
+      #
+      attr_reader :build_configuration_name
+
+      def setup_product_name_to_target_mapping
+        @product_name_to_target = Hash.new
+
+        @all_targets.each do |target|
+          build_settings = target.find_build_configuration(build_configuration_name).build_settings
+          full_settings = build_settings
+          full_settings[XcodeArchiveCache::BuildSettings::TARGET_NAME_KEY] = target.name
+          product_name = @interpolator.interpolate(build_settings[XcodeArchiveCache::BuildSettings::PRODUCT_NAME_KEY], full_settings)
+
+          next if product_name == nil
+
+          product_name_extension = ""
+          case target.product_type
+          when Xcodeproj::Constants::PRODUCT_TYPE_UTI[:framework]
+            product_name_extension = ".framework"
+          when Xcodeproj::Constants::PRODUCT_TYPE_UTI[:static_library]
+            product_name_extension = ".a"
+          end
+
+          full_product_name = "#{product_name}#{product_name_extension}"
+          @product_name_to_target[full_product_name] = target
+        end
+      end
 
       # @param [Xcodeproj::Project] project
       #
@@ -188,7 +227,16 @@ module XcodeArchiveCache
       # @return [Array<Xcodeproj::Project::Object::PBXNativeTarget>]
       #
       def find_with_product_path(path)
-        all_targets.select {|target| target.platform_name == platform_name && target.product_reference.path == path}
+        canonical = all_targets.select {|target| target.platform_name == platform_name && target.product_reference.path == path }
+        parsed = @product_name_to_target[File.basename(path)]
+
+        if canonical.length > 0
+          canonical
+        elsif parsed
+          [parsed]
+        else
+          []
+        end
       end
     end
   end
