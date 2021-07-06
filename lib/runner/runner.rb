@@ -9,7 +9,7 @@ module XcodeArchiveCache
       @config = config
 
       projects = list_projects
-      @native_target_finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new(projects)
+      @native_target_finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new(projects, config.active_configuration.build_configuration)
 
       storage_path = File.absolute_path(config.storage.path)
       @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(storage_path)
@@ -73,7 +73,8 @@ module XcodeArchiveCache
                                                                         config.settings.destination,
                                                                         config.active_configuration.action,
                                                                         config.active_configuration.xcodebuild_args)
-      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
+      build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(xcodebuild_executor)
+      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, build_settings_loader)
 
       dependency_targets = Hash.new
       build_graphs = Hash.new
@@ -87,8 +88,7 @@ module XcodeArchiveCache
       end
 
       pods_xcframeworks_fixer = XcodeArchiveCache::Injection::PodsXCFrameworkFixer.new(@injection_storage, @native_target_finder, config.active_configuration.build_configuration)
-      any_build_settings = build_graphs[target_config.dependencies[0]].dependent_build_settings
-      pods_xcframeworks_fixer.fix(target, any_build_settings)
+      pods_xcframeworks_fixer.fix(target, build_settings_loader)
 
       target_config.dependencies.each do |dependency_name|
         info("processing #{dependency_name}")
