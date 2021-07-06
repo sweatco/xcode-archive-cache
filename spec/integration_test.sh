@@ -274,7 +274,7 @@ set_pwd "$TEST_PROJECT_LOCATION"
 WORKSPACE="Test.xcworkspace"
 TARGET="Test"
 
-ALL_BUNDLES="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework|MidtransKit.bundle|MidtransCoreKit.framework|MidtransKit.framework"
+ALL_BUNDLES="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework|MidtransKit.bundle|MidtransCoreKit.framework|MidtransKit.framework|MoPubSDK.framework|MoPubResources.bundle|MoPub_Applovin_Adapters.framework"
 ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a|libLibraryThatUsesSibling.a|libAnotherStaticDependency.a"
 perform_full_clean && perform_app_test
 expect_bundles_to_be_rebuilt "$ALL_BUNDLES" "$CACHE_LOG_FILE"
