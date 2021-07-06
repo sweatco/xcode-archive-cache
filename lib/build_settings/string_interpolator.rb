@@ -12,15 +12,17 @@ module XcodeArchiveCache
       # @return [String]
       #
       def interpolate(string, build_settings)
-        names = parser.find_all_names(string)
+        return nil if string == nil
+
+        entries = parser.find_all_entries(string)
         result = string
 
-        names.each do |name|
-          value = build_settings[name]
+        entries.each do |entry|
+          value = build_settings[entry.name]
           next unless value
 
-          replacement_regex = parser.create_entry_regex(name)
-          result = result.gsub(replacement_regex, value)
+          modified_value = modify_setting_value(value, entry.modifiers)
+          result = result.gsub(entry.full_string, modified_value)
         end
 
         result
@@ -31,6 +33,20 @@ module XcodeArchiveCache
       # @return [Parser]
       #
       attr_accessor :parser
+
+      def modify_setting_value(value, modifiers)
+        modified_value = value
+
+        modifiers.each do |modifier|
+          case modifier
+          when "c99extidentifier"
+            modified_value = modified_value.gsub(/[-\s]/, "_")
+          else
+          end
+        end
+
+        modified_value
+      end
     end
   end
 end
