@@ -73,6 +73,7 @@ module XcodeArchiveCache
         original_platform = settings[EFFECTIVE_PLATFORM_NAME_KEY]
         simulator_platform = settings[CORRESPONDING_SIMULATOR_PLATFORM_NAME_KEY]
         settings[EFFECTIVE_PLATFORM_NAME_KEY] = "-#{simulator_platform}"
+        settings[PLATFORM_NAME_KEY] = simulator_platform
 
         configuration = settings[CONFIGURATION_KEY]
         path_regexp = Regexp.new("#{configuration}#{original_platform}")
@@ -82,6 +83,7 @@ module XcodeArchiveCache
         end
       end
 
+      PLATFORM_NAME_KEY = "PLATFORM_NAME".freeze
       EFFECTIVE_PLATFORM_NAME_KEY = "EFFECTIVE_PLATFORM_NAME".freeze
       CORRESPONDING_SIMULATOR_PLATFORM_NAME_KEY = "CORRESPONDING_SIMULATOR_PLATFORM_NAME".freeze
       CONFIGURATION_KEY = "CONFIGURATION".freeze

@@ -20,8 +20,9 @@ module XcodeArchiveCache
       # @param [Xcodeproj::Project::Object::PBXAbstractTarget] target
       # @param [XcodeArchiveCache::BuildSettings::Container] build_settings
       #
-      def fix(target, build_settings)
+      def fix(target, build_settings_loader)
         checked_targets.push(target.equatable_identifier)
+        build_settings = build_settings_loader.get_settings(target.project.path, target.display_name)
 
         debug("fixing #{target.display_name}")
         script_path = find_copy_xcframeworks_script(target, build_settings)
@@ -49,7 +50,7 @@ module XcodeArchiveCache
             next
           end
 
-          fix(dependency_target, build_settings)
+          fix(dependency_target, build_settings_loader)
         end
       end
 
@@ -113,7 +114,7 @@ module XcodeArchiveCache
       # @param [String] file_path
       #
       def fix_file(file_path)
-        info("fixing #{file_path}")
+        debug("fixing #{file_path}")
         contents = File
           .read(file_path)
           .gsub("${PODS_XCFRAMEWORKS_BUILD_DIR}", storage.container_dir_path)
