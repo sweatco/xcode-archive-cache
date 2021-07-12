@@ -6,17 +6,25 @@ RSpec.describe XcodeArchiveCache::BuildGraph::NativeTargetFinder, "#find" do
 
       @first_native_target = double("first_native_target")
       @first_product_ref = double("first_product_ref")
+      @first_build_configuration = double("first_build_configuration")
       allow(@first_product_ref).to receive(:path).and_return("/some/path")
       allow(@first_native_target).to receive(:product_reference).and_return(@first_product_ref)
       allow(@first_native_target).to receive(:platform_name).and_return("platform")
       allow(@first_native_target).to receive(:test_target_type?).and_return(false)
+      allow(@first_build_configuration).to receive(:build_settings).and_return(Hash.new)
+      allow(@first_native_target).to receive(:find_build_configuration).and_return(@first_build_configuration)
+      allow(@first_native_target).to receive(:name).and_return("first")
 
       @second_native_target = double("second_native_target")
       @second_product_ref = double("second_product_ref")
+      @second_build_configuration = double("second_build_configuration")
       allow(@second_product_ref).to receive(:path).and_return("/some/other/path")
       allow(@second_native_target).to receive(:product_reference).and_return(@second_product_ref)
       allow(@second_native_target).to receive(:platform_name).and_return("platform")
       allow(@second_native_target).to receive(:test_target_type?).and_return(false)
+      allow(@second_build_configuration).to receive(:build_settings).and_return(Hash.new)
+      allow(@second_native_target).to receive(:find_build_configuration).and_return(@second_build_configuration)
+      allow(@second_native_target).to receive(:name).and_return("second")
     end
 
     describe "with doubled project" do
@@ -64,7 +72,7 @@ RSpec.describe XcodeArchiveCache::BuildGraph::NativeTargetFinder, "#find" do
       end
 
       it "should not discover a target from doubled project multiple times" do
-        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project])
+        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project], "Debug")
         finder.set_platform_name_filter("platform")
 
         expect(finder.find_for_file(@file)).to eq(@first_native_target)
@@ -84,7 +92,7 @@ RSpec.describe XcodeArchiveCache::BuildGraph::NativeTargetFinder, "#find" do
         allow(@project).to receive(:native_targets).and_return([@first_native_target, @second_native_target])
         allow(@file_ref).to receive(:path).and_return("/some/path")
 
-        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project])
+        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project], "Debug")
         finder.set_platform_name_filter("platform")
         expect(finder.find_for_file(@file)).to eq(@first_native_target)
       end
@@ -107,7 +115,7 @@ RSpec.describe XcodeArchiveCache::BuildGraph::NativeTargetFinder, "#find" do
 
         allow(@file_ref).to receive(:path).and_return("/some/other/path")
 
-        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project])
+        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project], "Debug")
         finder.set_platform_name_filter("platform")
 
         expect(finder.find_for_file(@file)).to eq(@second_native_target)
@@ -152,7 +160,7 @@ RSpec.describe XcodeArchiveCache::BuildGraph::NativeTargetFinder, "#find" do
         allow(File).to(receive(:exist?)) {|file_path| file_path == "nested.xcodeproj"}
         allow(Xcodeproj::Project).to receive(:open) {|file_path| file_path == "nested.xcodeproj" ? @nested_project : nil}
 
-        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project])
+        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project], "Debug")
         finder.set_platform_name_filter("platform")
 
         expect(finder.find_for_file(@file)).to eq(@second_native_target)
@@ -162,7 +170,7 @@ RSpec.describe XcodeArchiveCache::BuildGraph::NativeTargetFinder, "#find" do
         allow(@project).to receive(:files).and_return([])
         allow(@remote_ref).to receive(:container_portal_object).and_return(@nested_project)
 
-        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project])
+        finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new([@project], "Debug")
         finder.set_platform_name_filter("platform")
 
         expect(finder.find_for_file(@file)).to eq(@second_native_target)

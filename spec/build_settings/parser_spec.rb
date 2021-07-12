@@ -27,8 +27,8 @@ RSpec.describe XcodeArchiveCache::BuildSettings::Parser, "#parse_build_settings"
   context "search" do
     it "should correctly find all setting names" do
       string = "${FIRST} $(SECOND) THIRD ${FOURTH} $(FOURTH)"
-      names = @parser.find_all_names(string)
-      expect(names).to eq(%w(FIRST SECOND FOURTH))
+      entries = @parser.find_all_entries(string)
+      expect(entries.map(&:name)).to eq(%w(FIRST SECOND FOURTH FOURTH))
     end
   end
 end
