@@ -1,6 +1,8 @@
 module XcodeArchiveCache
   module BuildSettings
 
+    PRODUCT_NAME_KEY = "PRODUCT_NAME".freeze
+    TARGET_NAME_KEY = "TARGET_NAME".freeze
     FULL_PRODUCT_NAME_KEY = "FULL_PRODUCT_NAME".freeze
     DWARF_DSYM_FILE_NAME_KEY = "DWARF_DSYM_FILE_NAME".freeze
     MODULEMAP_FILE_KEY = "MODULEMAP_FILE".freeze

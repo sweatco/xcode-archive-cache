@@ -8,6 +8,7 @@ def shared_pods
     pod 'SDCAlertView', '= 2.5.3'
     pod 'SwiftLint', '~> 0.27'
     pod 'MidtransKit', '1.15.4'
+    pod 'MoPub-Applovin-Adapters', '10.3.2.0'
 end
 
 target 'Test' do
