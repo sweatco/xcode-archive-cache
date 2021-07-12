@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: macos-10.15
+    runs-on: macos-11
     if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
 
     steps:
