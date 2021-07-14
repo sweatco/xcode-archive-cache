@@ -241,7 +241,7 @@ module XcodeArchiveCache
       def find_build_configuration(target)
         build_configuration = target.build_configurations.select { |configuration| configuration.name == configuration_name }.first
         unless build_configuration
-          raise Informative, "#{configuration_name} build configuration not found on target #{node.name}"
+          raise Informative, "#{configuration_name} build configuration not found on target #{target.display_name}"
         end
 
         build_configuration
