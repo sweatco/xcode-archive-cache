@@ -11,12 +11,12 @@ module BuildConfigurationSearch
   #
   # @return [Xcodeproj::Project::Object::XCBuildConfiguration]
   #
-  def find_build_configuration(configuration_name)
+  def find_build_configuration(configuration_name, raise_if_not_found: true)
     build_configuration = build_configurations
                             .select { |configuration| configuration.name == configuration_name }
                             .first
-    unless build_configuration
-      raise Informative, "#{configuration_name} build configuration not found on target #{display_name}"
+    if raise_if_not_found && build_configuration == nil
+      raise XcodeArchiveCache::Informative, "#{configuration_name} build configuration not found on target #{display_name} #{project.path}"
     end
 
     build_configuration

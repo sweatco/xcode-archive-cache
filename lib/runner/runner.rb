@@ -37,7 +37,7 @@ module XcodeArchiveCache
         return workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
       end
 
-      raise Informative, "Configuration misses entry point -- must have either a project or a workspace"
+      raise XcodeArchiveCache::Informative, "Configuration misses entry point -- must have either a project or a workspace"
     end
 
     def run
@@ -65,7 +65,7 @@ module XcodeArchiveCache
     def handle_target(target_config)
       target = @native_target_finder.find_for_product_name(target_config.name)
       unless target
-        raise Informative, "Target not found for #{target_config.name}"
+        raise XcodeArchiveCache::Informative, "Target not found for #{target_config.name}"
       end
 
       xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.active_configuration.build_configuration,
@@ -111,7 +111,7 @@ module XcodeArchiveCache
     def find_dependency_target(target, dependency_name)
       dependency_target = @native_target_finder.find_for_product_name(dependency_name)
       unless dependency_target
-        raise Informative, "Target not found for #{dependency_name} of #{target.display_name}"
+        raise XcodeArchiveCache::Informative, "Target not found for #{dependency_name} of #{target.display_name}"
       end
 
       dependency_target

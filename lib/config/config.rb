@@ -52,7 +52,7 @@ module XcodeArchiveCache
       def active_configuration
         configuration = configurations.select{|config| config.name == active_configuration_name }.first
         if configuration == nil
-          raise Informative, "Found no configuration with name \"#{active_configuration_name}\""
+          raise XcodeArchiveCache::Informative, "Found no configuration with name \"#{active_configuration_name}\""
         end
 
         configuration
@@ -172,7 +172,7 @@ module XcodeArchiveCache
         begin
           eval(contents, nil, path)
         rescue Exception => e
-          raise Informative, "Invalid #{File.basename(path)} file: #{e.message}"
+          raise XcodeArchiveCache::Informative, "Invalid #{File.basename(path)} file: #{e.message}"
         end
       end
 

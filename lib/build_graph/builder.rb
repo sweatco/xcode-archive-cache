@@ -61,7 +61,7 @@ module XcodeArchiveCache
         display_name = target.display_name
         if target_stack.include?(display_name)
           target_stack.push(display_name)
-          raise Informative, "Circular dependency detected: #{target_stack.join(" -> ")}"
+          raise XcodeArchiveCache::Informative, "Circular dependency detected: #{target_stack.join(" -> ")}"
         end
 
         node = ALL_NODES.select {|node| node.native_target.uuid == target.uuid && node.native_target.project == target.project}.first
@@ -141,7 +141,7 @@ module XcodeArchiveCache
         info("getting settings for #{target.display_name}")
         build_settings = build_settings_loader.get_settings(target.project.path, target.display_name)
         unless build_settings
-          raise Informative, "No build settings loaded for #{target.display_name}"
+          raise XcodeArchiveCache::Informative, "No build settings loaded for #{target.display_name}"
         end
 
         build_settings

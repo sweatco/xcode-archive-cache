@@ -117,7 +117,7 @@ module XcodeArchiveCache
         #
         inferred_destination = action == ARCHIVE_ACTION ? GENERIC_DESTINATION : destination_by_platform
         if inferred_destination == nil
-          raise Informative, "Destination not set for #{platform} platform"
+          raise XcodeArchiveCache::Informative, "Destination not set for #{platform} platform"
         end
 
         destination_specifier = inferred_destination == GENERIC_DESTINATION ? "generic/platform=#{platform}" : inferred_destination

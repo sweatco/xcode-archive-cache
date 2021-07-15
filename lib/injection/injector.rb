@@ -175,7 +175,7 @@ module XcodeArchiveCache
         debug("adding #{prebuilt_node.name} as prebuilt to #{dependent_target.display_name}")
 
         unless prebuilt_node.has_acceptable_product?
-          raise Informative, "#{prebuilt_node.name} has unsupported product type: #{prebuilt_node.native_target.product_type}"
+          raise XcodeArchiveCache::Informative, "#{prebuilt_node.name} has unsupported product type: #{prebuilt_node.native_target.product_type}"
         end
 
         if prebuilt_node.has_framework_product?

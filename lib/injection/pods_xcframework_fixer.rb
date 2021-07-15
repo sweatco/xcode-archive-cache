@@ -30,7 +30,7 @@ module XcodeArchiveCache
           fix_file(script_path)
           
           unless shell_executor.execute_with_env(script_path, build_settings.all)
-            raise Informative, "Failed to execute Pods XCFramework script #{script_path}"
+            raise XcodeArchiveCache::Informative, "Failed to execute Pods XCFramework script #{script_path}"
           end
         end
 

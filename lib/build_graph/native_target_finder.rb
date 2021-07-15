@@ -102,7 +102,7 @@ module XcodeArchiveCache
           end
 
           if target == nil
-            raise Informative, "Target for #{file.file_ref.path} not found"
+            raise XcodeArchiveCache::Informative, "Target for #{file.file_ref.path} not found"
           end
 
           target
@@ -110,7 +110,7 @@ module XcodeArchiveCache
           # products of sibling project targets are added as PBXFileReferences
           targets = find_with_product_path(file.file_ref.path)
           if targets.length > 1
-            raise Informative, "Found more than one target with product #{File.basename(file.file_ref.path)} in:\n#{targets.map(&:project)}"
+            raise XcodeArchiveCache::Informative, "Found more than one target with product #{File.basename(file.file_ref.path)} in:\n#{targets.map(&:project)}"
           end
 
           targets.first
@@ -149,7 +149,9 @@ module XcodeArchiveCache
         @product_name_to_target = Hash.new
 
         @all_targets.each do |target|
-          build_settings = target.find_build_configuration(build_configuration_name).build_settings
+          build_settings = target.find_build_configuration(build_configuration_name, raise_if_not_found: false)&.build_settings
+          next unless build_settings
+
           full_settings = build_settings
           full_settings[XcodeArchiveCache::BuildSettings::TARGET_NAME_KEY] = target.name
           product_name = @interpolator.interpolate(build_settings[XcodeArchiveCache::BuildSettings::PRODUCT_NAME_KEY], full_settings)
