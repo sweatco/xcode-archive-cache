@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.license  = "MIT"
   spec.homepage = "https://github.com/sweatco/xcode-archive-cache"
   spec.summary = "Native targets cache for Xcode archive builds."
-  spec.date = Date.today
+  spec.date = Time.now
 
   spec.add_runtime_dependency "xcodeproj",  ">= 1.10", "< 2.0"
   spec.add_runtime_dependency "rubyzip",    ">= 2.0", "< 3.0"
