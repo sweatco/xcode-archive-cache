@@ -1,0 +1,30 @@
+---
+format_version: '11'
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: other
+trigger_map:
+- pull_request_source_branch: "*"
+  workflow: primary
+  pull_request_target_branch: master
+workflows:
+  primary:
+    steps:
+    - activate-ssh-key@4:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - git-clone@6: {}
+    - script@1:
+        title: Install gems
+        inputs:
+        - content: gem install bundler:1.17.3 && bundle install --deployment
+    - script@1:
+        title: Update Pods repos
+        inputs:
+        - content: pod repo update
+    - script@1:
+        title: Run unit tests
+        inputs:
+        - content: bundle exec rspec
+    - script@1:
+        title: Run integration tests
+        inputs:
+        - content: cd spec && ./integration_test.sh
