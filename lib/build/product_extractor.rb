@@ -48,7 +48,7 @@ module XcodeArchiveCache
         elsif built_node.has_acceptable_product?
           list_single_product(built_node)
         else
-          raise Informative, "#{built_node.name} has unsupported product type: #{built_node.native_target.product_type}"
+          raise XcodeArchiveCache::Informative, "#{built_node.name} has unsupported product type: #{built_node.native_target.product_type}"
         end
       end
 
@@ -60,7 +60,7 @@ module XcodeArchiveCache
         framework_glob = get_main_product_glob(built_node)
         framework_path = Dir.glob(framework_glob).first
         unless framework_path
-          raise Informative, "Framework product not found for #{built_node.name}"
+          raise XcodeArchiveCache::Informative, "Framework product not found for #{built_node.name}"
         end
 
         framework_dsym_glob = File.join(File.dirname(framework_glob), built_node.dsym_file_name)
@@ -79,7 +79,7 @@ module XcodeArchiveCache
         product_glob = get_main_product_glob(built_node)
         product_path = Dir.glob(product_glob).first
         unless product_path
-          raise Informative, "Product of type #{built_node.native_target.product_type} not found for #{built_node.name}"
+          raise XcodeArchiveCache::Informative, "Product of type #{built_node.native_target.product_type} not found for #{built_node.name}"
         end
 
         paths = [product_path]
@@ -181,7 +181,7 @@ module XcodeArchiveCache
         executable_name = File.basename(framework_path, File.extname(framework_path))
         executable_path = File.join(framework_path, executable_name)
         unless File.exist?(executable_path)
-          raise Informative, "Failed to find executable inside framework: #{framework_path}"
+          raise XcodeArchiveCache::Informative, "Failed to find executable inside framework: #{framework_path}"
         end
 
         uuids = list_bc_symbolmap_uuids(executable_path)

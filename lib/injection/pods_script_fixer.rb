@@ -44,7 +44,7 @@ module XcodeArchiveCache
       # @return [String]
       #
       def find_embed_frameworks_script(target, build_settings)
-        find_script(target, build_settings, "[CP] Embed Pods Frameworks")
+        target.find_script(build_settings_interpolator, build_settings, "[CP] Embed Pods Frameworks")
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
@@ -53,25 +53,7 @@ module XcodeArchiveCache
       # @return [String]
       #
       def find_copy_resources_script(target, build_settings)
-        find_script(target, build_settings, "[CP] Copy Pods Resources")
-      end
-
-      # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
-      # @param [XcodeArchiveCache::BuildSettings::Container] build_settings
-      # @param [String] script_name
-      #
-      # @return [String]
-      #
-      def find_script(target, build_settings, script_name)
-        target.shell_script_build_phases.each do |phase|
-          if phase.display_name == script_name
-            return build_settings_interpolator.interpolate(phase.shell_script, build_settings)
-                       .gsub(/^"|"$/, "")
-                       .strip
-          end
-        end
-
-        nil
+        target.find_script(build_settings_interpolator, build_settings, "[CP] Copy Pods Resources")
       end
 
       # @param [String] file_path

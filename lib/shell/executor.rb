@@ -12,7 +12,7 @@ module XcodeArchiveCache
         output, status = Open3.capture2e(actual_command)
 
         if status.exitstatus != 0
-          raise Informative, "#{command}\nexecution failed\n#{output}"
+          raise XcodeArchiveCache::Informative, "#{command}\nexecution failed\n#{output}"
         end
 
         output
@@ -26,6 +26,18 @@ module XcodeArchiveCache
       def execute(command, print_command = false)
         actual_command = extend_for_pipefail(command, print_command)
         result = system actual_command
+
+        return false if result == nil
+        result
+      end
+
+      # @param [String] command
+      # @param [Hash] env
+      #
+      # @return [Boolean] true if command succeeded and returned 0, false otherwise
+      #
+      def execute_with_env(command, env)
+        result = system(env, "set -x && '#{command}'")
 
         return false if result == nil
         result

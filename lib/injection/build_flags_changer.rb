@@ -248,11 +248,14 @@ module XcodeArchiveCache
           replaced = replace_flag_value(build_configuration.build_settings, setting, flag_name, possible_old_values, new_value) || replaced
         end
 
-        if build_configuration.base_configuration_reference
-          xcconfig_path = build_configuration.base_configuration_reference.real_path
-          project_dir = File.dirname(build_configuration.project.path)
-
-          replaced = replace_flag_value_in_xcconfig_recursively(xcconfig_path, project_dir, setting_keys, flag_name, possible_old_values, new_value) || replaced
+        if build_configuration.has_xcconfig?
+          replaced = replace_flag_value_in_xcconfig_recursively(
+            build_configuration.get_xcconfig_path,
+            build_configuration.get_project_dir,
+            setting_keys,
+            flag_name,
+            possible_old_values,
+            new_value) || replaced
         end
 
         if !replaced && add_if_missing

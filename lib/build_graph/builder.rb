@@ -6,8 +6,8 @@ module XcodeArchiveCache
 
       # @param [XcodeArchiveCache::Xcodebuild::Executor] xcodebuild_executor
       #
-      def initialize(native_target_finder, xcodebuild_executor)
-        @build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(xcodebuild_executor)
+      def initialize(native_target_finder, build_settings_loader)
+        @build_settings_loader = build_settings_loader
         @native_target_finder = native_target_finder
         @sha_calculator = NodeShaCalculator.new
       end
@@ -61,7 +61,7 @@ module XcodeArchiveCache
         display_name = target.display_name
         if target_stack.include?(display_name)
           target_stack.push(display_name)
-          raise Informative, "Circular dependency detected: #{target_stack.join(" -> ")}"
+          raise XcodeArchiveCache::Informative, "Circular dependency detected: #{target_stack.join(" -> ")}"
         end
 
         node = ALL_NODES.select {|node| node.native_target.uuid == target.uuid && node.native_target.project == target.project}.first
@@ -83,11 +83,7 @@ module XcodeArchiveCache
         dependencies = []
         target_stack.push(display_name)
 
-        dependency_targets = target.dependencies.map {|dependency| native_target_finder.find_for_dependency(dependency)} +
-            target.frameworks_build_phase.files.map {|file| native_target_finder.find_for_file(file)}
-
-        # PBXNativeTarget has no custom equality check
-        deduplicated_targets = dependency_targets.compact.uniq {|dependency_target| dependency_target.uuid + dependency_target.display_name}
+        deduplicated_targets = native_target_finder.find_native_dependencies(target)
         debug("dependency targets: #{deduplicated_targets.map(&:display_name)}")
 
         deduplicated_targets.each do |dependency_target|
@@ -145,7 +141,7 @@ module XcodeArchiveCache
         info("getting settings for #{target.display_name}")
         build_settings = build_settings_loader.get_settings(target.project.path, target.display_name)
         unless build_settings
-          raise Informative, "No build settings loaded for #{target.display_name}"
+          raise XcodeArchiveCache::Informative, "No build settings loaded for #{target.display_name}"
         end
 
         build_settings

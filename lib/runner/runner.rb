@@ -9,7 +9,7 @@ module XcodeArchiveCache
       @config = config
 
       projects = list_projects
-      @native_target_finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new(projects)
+      @native_target_finder = XcodeArchiveCache::BuildGraph::NativeTargetFinder.new(projects, config.active_configuration.build_configuration)
 
       storage_path = File.absolute_path(config.storage.path)
       @cache_storage = XcodeArchiveCache::ArtifactCache::LocalStorage.new(storage_path)
@@ -37,7 +37,7 @@ module XcodeArchiveCache
         return workspace.file_references.map {|file_reference| Xcodeproj::Project.open(file_reference.absolute_path(workspace_dir))}
       end
 
-      raise Informative, "Configuration misses entry point -- must have either a project or a workspace"
+      raise XcodeArchiveCache::Informative, "Configuration misses entry point -- must have either a project or a workspace"
     end
 
     def run
@@ -65,7 +65,7 @@ module XcodeArchiveCache
     def handle_target(target_config)
       target = @native_target_finder.find_for_product_name(target_config.name)
       unless target
-        raise Informative, "Target not found for #{target_config.name}"
+        raise XcodeArchiveCache::Informative, "Target not found for #{target_config.name}"
       end
 
       xcodebuild_executor = XcodeArchiveCache::Xcodebuild::Executor.new(config.active_configuration.build_configuration,
@@ -73,7 +73,8 @@ module XcodeArchiveCache
                                                                         config.settings.destination,
                                                                         config.active_configuration.action,
                                                                         config.active_configuration.xcodebuild_args)
-      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, xcodebuild_executor)
+      build_settings_loader = XcodeArchiveCache::BuildSettings::Loader.new(xcodebuild_executor)
+      graph_builder = XcodeArchiveCache::BuildGraph::Builder.new(@native_target_finder, build_settings_loader)
 
       dependency_targets = Hash.new
       build_graphs = Hash.new
@@ -85,6 +86,9 @@ module XcodeArchiveCache
         dependency_targets[dependency_name] = dependency_target
         build_graphs[dependency_name] = graph_builder.build_graph(target, dependency_target)
       end
+
+      pods_xcframeworks_fixer = XcodeArchiveCache::Injection::PodsXCFrameworkFixer.new(@injection_storage, @native_target_finder, config.active_configuration.build_configuration)
+      pods_xcframeworks_fixer.fix(target, build_settings_loader)
 
       target_config.dependencies.each do |dependency_name|
         info("processing #{dependency_name}")
@@ -107,7 +111,7 @@ module XcodeArchiveCache
     def find_dependency_target(target, dependency_name)
       dependency_target = @native_target_finder.find_for_product_name(dependency_name)
       unless dependency_target
-        raise Informative, "Target not found for #{dependency_name} of #{target.display_name}"
+        raise XcodeArchiveCache::Informative, "Target not found for #{dependency_name} of #{target.display_name}"
       end
 
       dependency_target
