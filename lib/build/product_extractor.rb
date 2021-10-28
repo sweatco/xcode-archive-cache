@@ -122,10 +122,12 @@ module XcodeArchiveCache
       # @return [String]
       #
       def get_main_product_glob(built_node)
-        product_name = built_node.native_target.product_reference.name ?
-                           built_node.native_target.product_reference.name :
-                           built_node.native_target.product_reference.path
-        get_product_glob(File.basename(product_name))
+        product_names = [File.basename(built_node.native_target.product_reference.path)]
+        if built_node.native_target.product_reference.name
+          product_names.push(File.basename(built_node.native_target.product_reference.name))
+        end
+
+        get_product_glob(product_names.select { |name| File.extname(name).length > 0 })
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] built_node
@@ -133,7 +135,7 @@ module XcodeArchiveCache
       # @return [String]
       #
       def get_swift_objc_interface_header_glob(built_node)
-        get_product_glob(File.basename(built_node.swift_objc_interface_header_file))
+        get_product_glob([File.basename(built_node.swift_objc_interface_header_file)])
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] built_node
@@ -142,7 +144,7 @@ module XcodeArchiveCache
       #
       def get_swiftmodule_glob(built_node)
         if built_node.module_name
-          get_product_glob(built_node.module_name + ".swiftmodule")
+          get_product_glob([built_node.module_name + ".swiftmodule"])
         end
       end
 
@@ -153,24 +155,24 @@ module XcodeArchiveCache
       def get_modulemap_glob(built_node)
         resulting_modulemap_file_name = built_node.resulting_modulemap_file_name
         if resulting_modulemap_file_name
-          get_product_glob(resulting_modulemap_file_name)
+          get_product_glob([resulting_modulemap_file_name])
         else
           modulemap_file_path = built_node.original_modulemap_file_path
           if modulemap_file_path && File.exist?(modulemap_file_path)
             modulemap_file_name = File.basename(modulemap_file_path)
-            get_product_glob(modulemap_file_name)
+            get_product_glob([modulemap_file_name])
           end
         end
       end
 
-      # @param [String] file_name
+      # @param [Array<String>] file_names
       #
       # @return [String]
       #
-      def get_product_glob(file_name)
+      def get_product_glob(file_names)
         File.join(derived_data_path,
                   "**",
-                  file_name)
+                  "{#{file_names.join(",")}}")
       end
 
       # @param [String] framework_path

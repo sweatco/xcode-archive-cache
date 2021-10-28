@@ -77,7 +77,7 @@ module XcodeArchiveCache
       def prepare_storage(node)
         path = get_storage_path(node)
         if File.exist?(path)
-          raise StandardError.new, "Injection storage path is already busy"
+          raise StandardError.new, "Injection storage path is already busy: #{path}"
         end
 
         FileUtils.mkdir_p(path)
@@ -89,7 +89,12 @@ module XcodeArchiveCache
       # @return [String]
       #
       def get_storage_path(node)
-        File.join(container_dir_path, node.name)
+        path = File.join(container_dir_path, node.name)
+        if node.native_target
+          path += "-#{node.native_target.uuid}"
+        end
+
+        path
       end
 
       # @param [XcodeArchiveCache::BuildGraph::Node] node

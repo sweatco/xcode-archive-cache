@@ -53,7 +53,7 @@ make_filename_list_enumerable() {
 }
 
 install_pods() {
-  pod install
+  bundle exec pod install
   check_for_positive_result "Install pods"
 }
 

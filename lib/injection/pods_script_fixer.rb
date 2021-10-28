@@ -4,35 +4,40 @@ module XcodeArchiveCache
 
       include XcodeArchiveCache::Logs
 
-      def initialize
+      # @param [XcodeArchiveCache::Injection::Storage] storage
+      #
+      def initialize(storage)
+        @storage = storage
         @build_settings_interpolator = XcodeArchiveCache::BuildSettings::StringInterpolator.new
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
-      # @param [String] products_dir
       #
-      def fix_embed_frameworks_script(target, graph, products_dir)
+      def fix_embed_frameworks_script(target, graph)
         build_settings = graph.dependent_build_settings
         file_path = find_embed_frameworks_script(target, build_settings)
         return unless file_path
 
-        fix_script(file_path, graph, products_dir)
+        fix_script(file_path, graph)
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
       # @param [XcodeArchiveCache::BuildGraph::Graph] graph
-      # @param [String] products_dir
       #
-      def fix_copy_resources_script(target, graph, products_dir)
+      def fix_copy_resources_script(target, graph)
         build_settings = graph.dependent_build_settings
         file_path = find_copy_resources_script(target, build_settings)
         return unless file_path
 
-        fix_script(file_path, graph, products_dir)
+        fix_script(file_path, graph)
       end
 
       private
+
+      # @return [XcodeArchiveCache::Injection::Storage]
+      #
+      attr_reader :storage
 
       # @return [XcodeArchiveCache::BuildSettings::StringInterpolator]
       #
@@ -57,16 +62,14 @@ module XcodeArchiveCache
       end
 
       # @param [String] file_path
-      # @param [XcodeArchiveCache::BuildGraph::Node] graph
-      # @param [String] products_dir
+      # @param [XcodeArchiveCache::BuildGraph::Graph] graph
       #
-      def fix_script(file_path, graph, products_dir)
+      def fix_script(file_path, graph)
         info("fixing #{file_path}")
         script = File.read(file_path)
         graph.nodes.each do |node|
-          relative_product_path = "#{node.native_target.display_name}/#{node.product_file_name}"
-          absolute_product_path = File.join(products_dir, relative_product_path)
-          script = script.gsub(Regexp.new("\"[^\"]+\/#{node.product_file_name}\""), "\"#{absolute_product_path}\"")
+          product_path = File.join(storage.get_storage_path(node), node.product_file_name)
+          script = script.gsub(Regexp.new("\"[^\"]+\/#{node.product_file_name}\""), "\"#{product_path}\"")
         end
 
         File.open(file_path, "w") {|file| file.puts(script)}
