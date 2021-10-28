@@ -15,7 +15,7 @@ DEPENDENCIES:
   - KeychainAccess (~> 3.1)
 
 SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
+  https://github.com/CocoaPods/Specs.git:
     - GoogleDataTransport
     - GoogleDataTransportCCTSupport
     - KeychainAccess
@@ -29,4 +29,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 085189d2e4448905ecce1aef7f5d7ec738fb6f08
 
-COCOAPODS: 1.7.5
+COCOAPODS: 1.11.2

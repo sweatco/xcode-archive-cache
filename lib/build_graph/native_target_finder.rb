@@ -123,7 +123,7 @@ module XcodeArchiveCache
       #
       def find_for_product_name(product_name)
         canonical = all_targets
-          .select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name}
+          .select {|native_target| native_target.name == product_name || native_target.product_reference.display_name == product_name || native_target.product_reference.path == product_name }
           .first
         
         parsed = @product_name_to_target[product_name]

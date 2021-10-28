@@ -18,7 +18,7 @@ module XcodeArchiveCache
       end
 
       # @param [Xcodeproj::Project::Object::PBXAbstractTarget] target
-      # @param [XcodeArchiveCache::BuildSettings::Container] build_settings
+      # @param [XcodeArchiveCache::BuildSettings::Loader] build_settings_loader
       #
       def fix(target, build_settings_loader)
         checked_targets.push(target.equatable_identifier)
