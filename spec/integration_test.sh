@@ -25,7 +25,7 @@ TEST_PROJECT_LOCATION="$PWD/fixtures/test_project/Test"
 STATIC_LIB_MODULES_PROJECT_LOCATION="$PWD/fixtures/test_project/StaticLibModules"
 INTERSECTING_BUILD_GRAPHS_PROJECT_LOCATION="$PWD/fixtures/test_project/IntersectingBuildGraphs"
 
-IOS_DESTINATION="platform=iOS Simulator,name=iPhone 11,OS=latest"
+IOS_DESTINATION="platform=iOS Simulator,name=iPhone 13,OS=latest"
 WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 5 - 44mm,OS=latest"
 TEST_DESTINATION="${IOS_DESTINATION}|${WATCH_DESTINATION}"
 
@@ -274,7 +274,7 @@ set_pwd "$TEST_PROJECT_LOCATION"
 WORKSPACE="Test.xcworkspace"
 TARGET="Test"
 
-ALL_BUNDLES="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework|MidtransKit.bundle|MidtransCoreKit.framework|MidtransKit.framework|MoPubSDK.framework|MoPubResources.bundle|MoPub_Applovin_Adapters.framework"
+ALL_BUNDLES="SDCAutoLayout.framework|RBBAnimation.framework|MRProgress.framework|SDCAlertView.framework|Pods_Test.framework|FrameworkDependency.framework|KeychainAccess.framework|Pods_TestWatch_Extension.framework|MidtransKit.bundle|MidtransCoreKit.framework|MidtransKit.framework"
 ALL_LIBS="libLibraryWithFrameworkDependency.a|libStaticDependency.a|libLibraryThatUsesSibling.a|libAnotherStaticDependency.a"
 perform_full_clean && perform_app_test
 expect_bundles_to_be_rebuilt "$ALL_BUNDLES" "$CACHE_LOG_FILE"
