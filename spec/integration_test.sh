@@ -25,7 +25,7 @@ TEST_PROJECT_LOCATION="$PWD/fixtures/test_project/Test"
 STATIC_LIB_MODULES_PROJECT_LOCATION="$PWD/fixtures/test_project/StaticLibModules"
 INTERSECTING_BUILD_GRAPHS_PROJECT_LOCATION="$PWD/fixtures/test_project/IntersectingBuildGraphs"
 
-IOS_DESTINATION="platform=iOS Simulator,name=iPhone 11,OS=latest"
+IOS_DESTINATION="platform=iOS Simulator,name=iPhone 13,OS=latest"
 WATCH_DESTINATION="platform=watchOS Simulator,name=Apple Watch Series 5 - 44mm,OS=latest"
 TEST_DESTINATION="${IOS_DESTINATION}|${WATCH_DESTINATION}"
 
