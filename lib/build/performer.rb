@@ -6,9 +6,10 @@ module XcodeArchiveCache
 
       # @param [String] derived_data_path
       #
-      def initialize(xcodebuild_executor, derived_data_path)
+      def initialize(xcodebuild_executor, derived_data_path, workspace_path=nil)
         @xcodebuild_executor = xcodebuild_executor
         @derived_data_path = derived_data_path
+        @workspace_path = workspace_path
       end
 
       # @param [Xcodeproj::Project::Object::PBXNativeTarget] target
@@ -23,7 +24,12 @@ module XcodeArchiveCache
                              .join(", ")
           info("going to rebuild:\n#{rebuild_list}")
 
-          build_result = xcodebuild_executor.build(target.project.path, target.name, derived_data_path)
+          if workspace_path
+            build_result = xcodebuild_executor.build_from_workspace(workspace_path, target.name, derived_data_path)
+          else
+            build_result = xcodebuild_executor.build_from_project(target.project.path, target.name, derived_data_path)
+          end
+
           unless build_result
             raise StandardError.new, "Failed to perform rebuild"
           end
@@ -47,6 +53,10 @@ module XcodeArchiveCache
       # @return [XcodeArchiveCache::Xcodebuild::Executor]
       #
       attr_reader :xcodebuild_executor
+
+      # @return [String]
+      #
+      attr_reader :workspace_path
     end
   end
 end
