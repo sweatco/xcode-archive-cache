@@ -1,5 +1,4 @@
 PODS:
-  - AppLovinSDK (10.3.2)
   - KeychainAccess (3.2.0)
   - MidtransCoreKit (1.15.4)
   - MidtransKit (1.15.4):
@@ -7,15 +6,6 @@ PODS:
     - MidtransKit/UI (= 1.15.4)
   - MidtransKit/UI (1.15.4):
     - MidtransCoreKit (= 1.15.4)
-  - MoPub-Applovin-Adapters (10.3.2.0):
-    - MoPub-Applovin-Adapters/MoPub (= 10.3.2.0)
-    - MoPub-Applovin-Adapters/Network (= 10.3.2.0)
-  - MoPub-Applovin-Adapters/MoPub (10.3.2.0):
-    - mopub-ios-sdk/Core (~> 5.17.0)
-  - MoPub-Applovin-Adapters/Network (10.3.2.0):
-    - AppLovinSDK (= 10.3.2)
-    - mopub-ios-sdk/Core (~> 5.17.0)
-  - mopub-ios-sdk/Core (5.17.0)
   - MRProgress (0.8.3):
     - MRProgress/ActivityIndicator (= 0.8.3)
     - MRProgress/Blur (= 0.8.3)
@@ -54,19 +44,15 @@ PODS:
 DEPENDENCIES:
   - KeychainAccess (~> 3.1)
   - MidtransKit (= 1.15.4)
-  - MoPub-Applovin-Adapters (= 10.3.2.0)
   - MRProgress (~> 0.8)
   - SDCAlertView (= 2.5.3)
   - SwiftLint (~> 0.27)
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
-    - AppLovinSDK
     - KeychainAccess
     - MidtransCoreKit
     - MidtransKit
-    - MoPub-Applovin-Adapters
-    - mopub-ios-sdk
     - MRProgress
     - RBBAnimation
     - SDCAlertView
@@ -74,18 +60,15 @@ SPEC REPOS:
     - SwiftLint
 
 SPEC CHECKSUMS:
-  AppLovinSDK: 3bbfef1e3ac84d85f556fda26e50f5a70230b970
   KeychainAccess: 3b1bf8a77eb4c6ea1ce9404c292e48f948954c6b
   MidtransCoreKit: e94026826d7bfbb03f29fe7cfdf4208aad6093f5
   MidtransKit: 255b70500e24fde7aed899f65e2d9db55da7dfd1
-  MoPub-Applovin-Adapters: 072fc024e74cd8e699ed619592e1b185a51362c7
-  mopub-ios-sdk: 36d322902674b79b0560a1cb8d15af0548d364ea
   MRProgress: 16de7cc9f347e8846797a770db102a323fe7ef09
   RBBAnimation: 4b2d66f6d993febce63cd564da934985313b9c59
   SDCAlertView: 7554e4e7ce1adbefbcc7374e7bae237dad32a8d8
   SDCAutoLayout: e6885bb39ab8e2ec2ff84d158f38035f025f7420
   SwiftLint: 009a898ef2a1c851f45e1b59349bf6ff2ddc990d
 
-PODFILE CHECKSUM: 9b2302537c79a597266bd3db40d3eb5d2a00eddf
+PODFILE CHECKSUM: 26e55df8a76b5c50081e8b3aae3e5e4e66d5bdb3
 
 COCOAPODS: 1.11.2
