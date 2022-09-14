@@ -14,9 +14,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
 
       - name: Install bundle
-        run: gem install bundler:1.17.3 && bundle install --deployment
+        run: gem update --system && bundle install
 
       - name: Update pods repo
         run: pod repo update
