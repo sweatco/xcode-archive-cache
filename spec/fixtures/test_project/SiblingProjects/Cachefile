@@ -1,0 +1,14 @@
+workspace "SiblingProjects" do
+  configuration "Debug" do
+    build_configuration "Debug"
+    action "build"
+    xcodebuild_args "-UseModernBuildSystem=NO"
+  end
+
+  derived_data_path "build"
+
+  target "SiblingProjects" do
+    cache "libStaticLibrary.a"
+  end
+end
+

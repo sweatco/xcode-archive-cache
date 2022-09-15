@@ -133,7 +133,8 @@ module XcodeArchiveCache
     # @param [XcodeArchiveCache::BuildGraph::Graph] graph
     #
     def rebuild_if_needed(xcodebuild_executor, root_target, graph)
-      rebuild_performer = XcodeArchiveCache::Build::Performer.new(xcodebuild_executor, config.settings.derived_data_path)
+      workspace_path = config.is_a?(XcodeArchiveCache::Config::Workspace) ? File.absolute_path(config.file_path) : nil
+      rebuild_performer = XcodeArchiveCache::Build::Performer.new(xcodebuild_executor, config.settings.derived_data_path, workspace_path)
       return unless rebuild_performer.should_rebuild?(graph)
 
       @injector.perform_internal_injection(graph)

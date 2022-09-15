@@ -43,8 +43,30 @@ module XcodeArchiveCache
       # @param [String] scheme
       # @param [String] derived_data_path
       #
-      def build(project_path, scheme, derived_data_path)
-        flags = [project_flag(project_path),
+      def build_from_project(project_path, scheme, derived_data_path)
+        build(project_flag(project_path), scheme, derived_data_path)
+      end
+
+      # @param [String] workspace_flag
+      # @param [String] scheme
+      # @param [String] derived_data_path
+      #
+      def build_from_workspace(workspace_path, scheme, derived_data_path)
+        build(workspace_flag(workspace_path), scheme, derived_data_path)
+      end
+
+      def set_up_for_simulator?
+        destination_flag.include?("Simulator")
+      end
+
+      private
+
+      # @param [String] path_flag
+      # @param [String] scheme
+      # @param [String] derived_data_path
+      #
+      def build(path_flag, scheme, derived_data_path)
+        flags = [path_flag,
                  configuration_flag,
                  destination_flag,
                  scheme_flag(scheme),
@@ -54,12 +76,6 @@ module XcodeArchiveCache
         command = "#{compile_command(flags)} | xcpretty"
         shell_executor.execute(command, true)
       end
-
-      def set_up_for_simulator?
-        destination_flag.include?("Simulator")
-      end
-
-      private
 
       # @return [String]
       #
@@ -91,6 +107,14 @@ module XcodeArchiveCache
       #
       def compile_command(flags)
         "xcodebuild #{flags.join(" ")}"
+      end
+
+      # @param [String] workspace_path
+      #
+      # @return [String]
+      #
+      def workspace_flag(workspace_path)
+        "-workspace '#{workspace_path}'"
       end
 
       # @param [String] project_path
